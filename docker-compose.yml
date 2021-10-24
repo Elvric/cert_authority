@@ -1,0 +1,47 @@
+version: "3"
+services: 
+  webserver:
+    build:
+      context: webserver
+      dockerfile: WebServer.dockerfile
+    tty: true
+    networks:
+      - dmz
+    ports:
+      - "443:443"
+  caserver:
+    build:
+      context: caserver
+      dockerfile: CAServer.dockerfile
+    tty: true
+    networks:
+      - internal_net
+  firewall:
+    build:
+      context: firewall
+      dockerfile: FireWall.dockerfile
+    tty: true
+    networks:
+      - internal_net
+      - dmz
+  database:
+    build:
+      context: database
+      dockerfile: Database.dockerfile
+    volumes:
+      - ./database/imovies_users.dump:/docker-entrypoint-initdb.d/dump.sql
+    networks:
+      - internal_net
+
+  backupserver:
+    build:
+      context: backupserver
+      dockerfile: BackupServer.dockerfile
+    networks:
+      - internal_net
+
+networks:
+  internal_net:
+    driver: bridge
+  dmz:
+    driver: bridge
