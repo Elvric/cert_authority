@@ -28,8 +28,6 @@ services:
     build:
       context: database
       dockerfile: Database.dockerfile
-    volumes:
-      - ./database/imovies_users.dump:/docker-entrypoint-initdb.d/dump.sql
     networks:
       - internal_net
 
