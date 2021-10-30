@@ -30,6 +30,8 @@ services:
       dockerfile: Database.dockerfile
     networks:
       - internal_net
+    ports:
+      - "3306:3306"
 
   backupserver:
     build:
