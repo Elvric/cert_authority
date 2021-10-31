@@ -15,4 +15,4 @@ Use `pipenv install [dep]` to install new dependencies, or `pip3 uninstall [pkg]
 to remove packages.
 
 **This will ensure that upon pushing and pullin we all have a working version of the 
-python code with all the dependencies listed. This will also make push to production easier.
+python code with all the dependencies listed. This will also make push to production easier.**

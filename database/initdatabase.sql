@@ -12,8 +12,6 @@ CREATE TABLE certificates (
     FOREIGN KEY (uid) REFERENCES users(uid))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-insert into isadmin select uid,0 from users;
-
 create user certmanager@localhost identified by 'SniaVj5YQnKSXXVu';
 grant insert on imovies.users to certmanager@localhost;
 grant insert on imovies.isadmin to certmanager@localhost;
@@ -26,3 +24,14 @@ grant select on imovies.isadmin to certmanager@localhost;
 grant select on imovies.certificates to certmanager@localhost;
 
 flush privileges;
+
+insert into isadmin select uid,0 from users;
+
+delimiter |
+CREATE TRIGGER isadminInsert AFTER INSERT ON users
+    FOR EACH ROW
+BEGIN
+    INSERT INTO isadmin values (new.uid, 0);
+END; |
+delimiter ;
+
