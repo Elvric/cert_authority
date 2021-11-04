@@ -1,0 +1,20 @@
+# TODO: Setup TLS
+server {
+    listen 443;
+    listen [::]:443;
+
+    root /webserver/frontend/build/;
+    index index.html index.htm index.nginx-debian.html;
+
+    # server_name your_domain www.your_domain;
+
+    # Serve React static files 
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Redirect api requests to CA Server
+    location /api {
+        rewrite ^/api(.*)$ firewall redirect;
+    }
+}

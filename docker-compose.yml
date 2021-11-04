@@ -1,10 +1,12 @@
 version: "3"
-services: 
+services:
   webserver:
     build:
       context: webserver
       dockerfile: WebServer.dockerfile
     tty: true
+    volumes:
+      - ./webserver/:/webserver/
     networks:
       - dmz
     ports:
