@@ -11,7 +11,7 @@ directory.
 Ensure you are in the correct python virtual environment at all time. To be in
 the environment run `source ./caserver/venv/bin/activate`. From there run 
 `pipenv update`. This will install the dependencies present under the `Pipfile`.
-Use `pipenv install [dep]` to install new dependencies, or `pip3 uninstall [pkg]`
+Use `pipenv install [dep]` to install new dependencies, or `pipenv uninstall [pkg]`
 to remove packages.
 
 **This will ensure that upon pushing and pullin we all have a working version of the 
