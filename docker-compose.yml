@@ -25,6 +25,7 @@ services:
       context: firewall
       dockerfile: FireWall.dockerfile
     tty: true
+    privileged: true
     networks:
       internal_net:
         ipv4_address: 172.17.0.254
