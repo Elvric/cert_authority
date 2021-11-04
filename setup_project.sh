@@ -7,4 +7,4 @@ virtualenv ./caserver/venv
 
 sudo apt install nodejs
 sudo apt install npm
-cd webserver && npm install
+cd webserver/frontend && npm install
