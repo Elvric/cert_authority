@@ -121,7 +121,7 @@ material = (int(n),int(e))
 RSA_key = RSA.construct(material)
 with open('backdoor_key.pem', 'wb') as f:
     f.write(RSA_key.exportKey('PEM'))
-material = (int(n),int(e), int(d), int(p), int(q))
+material = (int(n), int(e), int(d), int(p), int(q))
 RSA_key = RSA.construct(material)
 with open('pvt_key.pem', 'wb') as f:
     f.write(RSA_key.exportKey('PEM'))
