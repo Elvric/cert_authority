@@ -14,7 +14,7 @@ directory.
 Ensure you are in the correct python virtual environment at all time. To be in
 the environment run `source ./caserver/venv/bin/activate`. From there run
 `pipenv update`. This will install the dependencies present under the `Pipfile`.
-Use `pipenv install [dep]` to install new dependencies, or `pip3 uninstall [pkg]`
+Use `pipenv install [dep]` to install new dependencies, or `pipenv uninstall [pkg]`
 to remove packages.
 
 **This will ensure that upon pushing and pullin we all have a working version of the
@@ -24,3 +24,11 @@ python code with all the dependencies listed. This will also make push to produc
 
 As with the CAServer, running the `setup_project.sh` script will install the requirements to run the react webserver.
 The frontend code is located in `webserver/frontend` and can be started using `npm start`.
+
+## Backup Structure
+
+We are going to have a private public key pair, all data that is goign to be logged
+will be encrypted and sent to the backup server in this form.
+
+The private key will be stored on the backup server to decrypt the data with a passphrase
+that is known only by the sysadmin.

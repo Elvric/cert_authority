@@ -6,7 +6,6 @@ CREATE TABLE isadmin (
     ENGINE=MyISAM DEFAULT CHARSET=latin1;;
 CREATE TABLE certificates (
     uid varchar(64),
-    privatekey char(200) not null,
     publickey char(200) not null,
     is_revoked bool not null default 0,
     FOREIGN KEY (uid) REFERENCES users(uid))
