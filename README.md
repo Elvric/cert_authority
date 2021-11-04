@@ -16,3 +16,10 @@ to remove packages.
 
 **This will ensure that upon pushing and pullin we all have a working version of the 
 python code with all the dependencies listed. This will also make push to production easier.**
+
+## Backup Structure
+We are going to have a private public key pair, all data that is goign to be logged
+will be encrypted and sent to the backup server in this form.
+
+The private key will be stored on the backup server to decrypt the data with a passphrase
+that is known only by the sysadmin.
