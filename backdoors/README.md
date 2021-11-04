@@ -1,7 +1,10 @@
-Just run `klepto_v2.py`. It will generate:
+Just run `backdoor.sh`. It will generate:
 - `pub_key.pem` being the public key with the backdoor
 - `pvt_key.pem` being the private key.
+- `nsa_key.txt` being the aes key.
 
-For generating the self-signed certificate, just run `generate_self_signed_cert.sh`.
-It will create a self signed certificate for the root CA of IMovies for which it can sign certificates for the machines using TLS and the users.
-The private key and certificate for the root CA will be copied to `backupserver/CA/private` and `backupserver/CA/`  
+It will use `klepto_v2.py`. The files are generated in `backupserver`.
+
+Note that the runtime is quite long.
+
+After this you can move to `backupserver/README.md`.

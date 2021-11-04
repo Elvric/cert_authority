@@ -12,7 +12,7 @@ SIZE = 1024
 '''
 Miller-Rabin primality test on n for k trials (k 40)
 '''
-def miller_rabin(n, k=10):
+def miller_rabin(n, k=40):
     if n == 2:
         return True
 
@@ -97,14 +97,14 @@ def generate_rsa_key():
         except:
             continue
     print(key.decode('utf8'))
-    print("Pub Key:\n")
+    print("------------Pub Key------------\n")
     print(f"Modulus: {n}\n")
     print(f"Exponent: {e}\n")
-    print("Private key:\n")
+    print("------------Private Key----------\n")
     print(f"d: {d}\n")
     print(f"p: {p}\n")
     print(f"q: {q}\n")
-    return n,p,q,d,e,key
+    return n,p,q,d,e,key.decode('utf8')
 
 def split_using_lambda(n, s):
     """
@@ -148,7 +148,7 @@ def backdoor(e,n,key):
     eps = int.from_bytes(pt, "big")
     delta = owiener.attack(eps,n)
     if delta is None:
-        print("FAIL")
+        print("FAILED WIENER")
         return
     else:
         s = eps*delta - 1
@@ -157,8 +157,11 @@ def backdoor(e,n,key):
 
 def backdoor_p(n,e,key):
     p = backdoor(e,n,key)
+    if p is None:
+        print("ERROR!!\nSomething went wrong...please try run again")
+        exit
     q = n//p
-    print(p,q)
+    print(f"Prime factors:\n{p}\n{q}\n Please compare with private key factors")
     phi = (p-1)*(q-1)
     d = int(gmpy2.invert(int(e), int(phi)))
     return p,q,d
@@ -169,12 +172,17 @@ if __name__ == '__main__':
     
     assert d == d_new
     print("OK!")
+
     material = (int(n),int(e))
     RSA_key = RSA.construct(material)
     with open('pub_key.pem', 'wb') as f:
         f.write(RSA_key.exportKey('PEM'))
+    
     material = (int(n),int(e), int(d), int(p), int(q))
     RSA_key = RSA.construct(material)
     with open('pvt_key.pem', 'wb') as f:
         f.write(RSA_key.exportKey('PEM'))
+    
+    with open('nsa_key.txt', 'w') as f:
+        f.write(key)
 
