@@ -3,3 +3,4 @@ sys_desc_and_analysis/*
 !sys_desc_and_analysis/systemdescription.tex
 /.idea/
 /caserver/.idea/
+/webserver/babel.json
