@@ -1,6 +1,5 @@
 #!/bin/sh
-echo "SETUP IN PROGRESS"
 apt-get install nginx -y
-cp /tmp/setup/nginx/webserver /etc/nginx/sites-available/default
-
-service nginx restart
+cp /tmp/setup/nginx/nginx.conf /etc/nginx/sites-available/default
+mkdir /etc/nginx/ssl
+cp /tmp/setup/cert/* /etc/nginx/ssl
