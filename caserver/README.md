@@ -1,0 +1,1 @@
+The dir `intermediate` contains the intermediate CA for issuing client certificates

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Generate the root CA self signed certificate for signing certificates
+
 rm cacert.csr >out 2>&1
 rm cacert.crt >out 2>&1
 rm -r ./CA
@@ -8,7 +10,9 @@ rm -r ./CA
 mkdir ./CA
 mkdir ./CA/newcerts
 mkdir ./CA/private
+mkdir ./CA/crl
 echo '01' > ./CA/serial
+echo '01' > ./CA/crlnumber
 touch ./CA/index.txt
 
 commonname=imovies

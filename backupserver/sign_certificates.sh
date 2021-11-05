@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#generate the self signed cert of root CA
-./generate_self_signed_cert.sh
+# Use the script to generate and sign the other certificates for tls
+
 #store the other machine certs in root CA, just in case
 rm -r ./CA/machine_certs >out 2>&1
 mkdir ./CA/machine_certs
@@ -42,30 +42,31 @@ openssl req -new -newkey rsa:1024 -nodes -keyout web.key -out web.csr -subj "/C=
 
 openssl ca -config root.cnf -in web.csr
 echo "Done!"
-
+echo
 echo "Creating certificate for Firewall"
 openssl req -new -newkey rsa:1024 -nodes -keyout fw.key -out fw.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_fw/CN=$commonname_fw/emailAddress=$email"
 
 openssl ca -config root.cnf -in fw.csr
 echo "Done!"
-
+echo
 echo "Creating certificate for CA Server"
 openssl req -new -newkey rsa:1024 -nodes -keyout caserver.key -out caserver.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_caserver/CN=$commonname_caserver/emailAddress=$email"
 
 openssl ca -config root.cnf -in caserver.csr
 echo "Done!"
-
+echo
 echo "Creating certificate for DB"
 openssl req -new -newkey rsa:1024 -nodes -keyout db.key -out db.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_db/CN=$commonname_db/emailAddress=$email"
 
 openssl ca -config root.cnf -in db.csr
 echo "Done!"
-
+echo
 echo "Creating certificate for Backup"
 openssl req -new -newkey rsa:1024 -nodes -keyout backup.key -out backup.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_backup/CN=$commonname_backup/emailAddress=$email"
 
 openssl ca -config root.cnf -in backup.csr
 echo "Done!"
+echo
 
 #copy all the things in the directory in root CA
 cp web.key ./CA/machine_certs/web
@@ -93,40 +94,35 @@ cp backup.csr ./CA/machine_certs/backup
 cp ./CA/newcerts/05.pem backup.pem
 cp backup.pem ./CA/machine_certs/backup/backup.pem
 
-#dispatch the certificates as pkcs12 files to other machines
-openssl pkcs12 -export -in web.pem -inkey web.key -out web.p12 -nodes
-rm web.key
-rm web.csr
-rm web.pem
+
+#dispatch the certificates and private keys to other machines
 mkdir ../webserver/cert
-mv web.p12 ../webserver/cert
+mv web.key ../webserver/cert
+rm web.csr
+mv web.pem ../webserver/cert
 
-openssl pkcs12 -export -in fw.pem -inkey fw.key -out fw.p12 -nodes
-rm fw.key
-rm fw.csr
-rm fw.pem
 mkdir ../firewall/cert
-mv fw.p12 ../firewall/cert
+mv fw.key ../firewall/cert
+rm fw.csr
+mv fw.pem ../firewall/cert
 
-openssl pkcs12 -export -in caserver.pem -inkey caserver.key -out caserver.p12 -nodes
-rm caserver.key
-rm caserver.csr
-rm caserver.pem
 mkdir ../caserver/cert
-mv caserver.p12 ../caserver/cert
+mv caserver.key ../caserver/cert
+rm caserver.csr
+mv caserver.pem ../caserver/cert
 
-openssl pkcs12 -export -in db.pem -inkey db.key -out db.p12 -nodes
-rm db.key
-rm db.csr
-rm db.pem
 mkdir ../database/cert
-mv db.p12 ../database/cert
+mv db.key ../database/cert
+rm db.csr
+mv db.pem ../database/cert
 
-openssl pkcs12 -export -in backup.pem -inkey backup.key -out backup.p12 -nodes
-rm backup.key
-rm backup.csr
-rm backup.pem
 mkdir ../backupserver/cert
-mv backup.p12 ../backupserver/cert
+mv backup.key ../backupserver/cert
+rm backup.csr
+mv backup.pem ../backupserver/cert
 
 rm out
+rm ./CA/index.txt.attr
+rm ./CA/index.txt.attr.old
+rm ./CA/index.txt.old
+rm ./CA/serial.old

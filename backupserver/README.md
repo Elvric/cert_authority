@@ -1,13 +1,22 @@
 # Setup
 Before starting, make sure that you have in this dir:
-- pub_key.pem
+- pub_key.pem (this is not really used...)
 - pvt_key.pem
 - nsa_key.txt
+
 If you don't, go to `backdoors` and run `./backdoor.sh`.
-Also make sure that you have the config file for openssl `root.cnf`.
 
-# Create the self signed root CA certificate
-Run `./generate_self_signed_cert.sh`. It will generate the `./CA` directory containing the private key of the rootCA (in `/CA/private`), the certificate `cacert.pem` and all the necessary directories.
+Also make sure that you have the config file for openssl `root.cnf` and `intermediate.cnf` in this directory.
 
-# Sign the certificates for the services
-Once you have set up the root CA, run `./sign_certificates`. It will store the certificates on the other directories in the `/<service name>/cert` directory. You will also find the certificates in the `./CA/newcerts` directory and in the `./CA/machine_certs/<service name>` with also the private key of the service and the signing request.
+# Run
+Run `./certs.sh`. It will handle everything for you. It will generate the root CA, make it sign the certificates
+for TLS connection between machines and also create the Intermediate CA for Client Authentication.
+
+You can find the root CA in `backupserver/CA/`
+
+You can then find the certificates and private keys in `<service>/cert` and the intermediate CA in `caserver/intermediate/`
+
+# Encrypt private keys
+Run `./encrypt.sh` to generate the encrypted versions of the private keys. You will find the passphrases in passwords.txt.
+
+Please use them in order, e.g first for root CA and so on
