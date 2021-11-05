@@ -8,4 +8,4 @@ COPY cert /tmp/setup/cert
 COPY openssl.cnf /etc/ssl
 RUN chmod u+x /tmp/setup/setup.sh
 RUN ./tmp/setup/setup.sh
-CMD service nginx restart || cat
+CMD service nginx restart && cat
