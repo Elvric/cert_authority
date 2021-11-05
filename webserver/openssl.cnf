@@ -1,17 +1,8 @@
+openssl_conf = openssl_init
 #
-# OpenSSL example configuration file. Modified
+# OpenSSL example configuration file.
 # This is mostly being used for generation of certificate requests.
 #
-openssl_conf = openssl_init
-
-openssl_init]
-ssl_conf = ssl_sect
-
-[ssl_sect]
-system_default = system_default_sect
-
-[system_default_sect]
-CipherString = DEFAULT@SECLEVEL=1
 
 # Note that you can include other files from the main configuration
 # file using the .include directive.
@@ -359,3 +350,11 @@ ess_cert_id_chain       = no    # Must the ESS cert id chain be included?
 ess_cert_id_alg         = sha1  # algorithm to compute certificate
                                 # identifier (optional, default: sha1)
 
+[openssl_init]
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+CipherString = DEFAULT@SECLEVEL=1
