@@ -9,7 +9,7 @@ services:
       - ./webserver/:/webserver/
     networks:
       dmz:
-        ipv4_address: 172.16.0.2
+        ipv4_address: 172.26.0.2
     ports:
       - "443:443"
   caserver:
@@ -21,7 +21,7 @@ services:
       - ./caserver/:/caserver/
     networks:
       internal_net:
-        ipv4_address: 172.17.0.2
+        ipv4_address: 172.27.0.2
   firewall:
     build:
       context: firewall
@@ -30,16 +30,16 @@ services:
     privileged: true
     networks:
       internal_net:
-        ipv4_address: 172.17.0.254
+        ipv4_address: 172.27.0.254
       dmz:
-        ipv4_address: 172.16.0.254
+        ipv4_address: 172.26.0.254
   database:
     build:
       context: database
       dockerfile: Database.dockerfile
     networks:
       internal_net:
-          ipv4_address: 172.17.0.3
+          ipv4_address: 172.27.0.3
     ports:
       - "3306:3306"
 
@@ -50,16 +50,16 @@ services:
     tty: true
     networks:
       internal_net:
-          ipv4_address: 172.17.0.4
+          ipv4_address: 172.27.0.4
 
 networks:
   internal_net:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.17.0.0/16
+        - subnet: 172.27.0.0/16
   dmz:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.16.0.0/16
+        - subnet: 172.26.0.0/16
