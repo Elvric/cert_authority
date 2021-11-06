@@ -4,3 +4,4 @@ sys_desc_and_analysis/*
 /.idea/
 /caserver/.idea/
 /webserver/babel.json
+/caserver/api/venv/
