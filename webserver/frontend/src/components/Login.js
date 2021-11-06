@@ -2,23 +2,12 @@
 import React, {Component, useState, useEffect} from 'react';
 
 //BootStrap react imports
-import Container from 'react-bootstrap/Container';
-import Collapse from 'react-bootstrap/Collapse';
-import Navbar from 'react-bootstrap/Navbar';
-import NavLink from 'react-bootstrap/NavLink';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+
 import Form from 'react-bootstrap/Form';
-import FormGroup from 'react-bootstrap/FormGroup';
 import Button from 'react-bootstrap/Button';
-import ListGroup from 'react-bootstrap/ListGroup';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
-import ListGroupItem from 'react-bootstrap/esm/ListGroupItem';
-import Modal from 'react-bootstrap/Modal';
-import ModalTitle from 'react-bootstrap/ModalTitle';
-import ModalHeader from 'react-bootstrap/ModalHeader';
-import ModalBody from 'react-bootstrap/ModalBody';
-import ModalFooter from 'react-bootstrap/ModalFooter';
+
 import 'whatwg-fetch';
 import "./Login.css";
 
@@ -81,6 +70,7 @@ export default function Login(props){
               <Form.Label>Password</Form.Label>
               
               <Form.Control
+                autoFocus
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -88,8 +78,8 @@ export default function Login(props){
             </Form.Group>
             
             <div className="LoginButton">
-                <Button block size="lg" type="submit" disabled={!validateForm()}>
-                Login
+                <Button block variant="success" size ="lg" type="submit" disabled={!validateForm()}>
+                    Login
                 </Button>
             </div>
           </Form>
