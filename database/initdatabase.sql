@@ -1,14 +1,17 @@
 CREATE TABLE isadmin (
     uid varchar(64),
-    isadmin bool not null default 0,
+    isCaAdmin bool not null default 0,
+    isSysAdmin bool not null default 0,
     FOREIGN KEY (uid) REFERENCES users(uid),
     PRIMARY KEY (uid))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;;
 CREATE TABLE certificates (
+    serial int not null,
     uid varchar(64),
     publickey char(200) not null,
     is_revoked bool not null default 0,
     FOREIGN KEY (uid) REFERENCES users(uid))
+    PRIMARY KEY (serial)
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 create user certmanager@localhost identified by 'SniaVj5YQnKSXXVu';
