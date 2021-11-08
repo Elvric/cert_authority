@@ -17,24 +17,44 @@ import ModalFooter from 'react-bootstrap/ModalFooter';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function EditModal(props){
-    const field = {...props.field};
-
     const handleChange = (e) => {
         props.setField(e.target.value);
     }
     const handleSubmit = async function (e) {
         console.log("submit");
+        let uid = props.user.UserId;
+        let password = props.user.Password;
+        let firstName = props.user.FirstName;
+        let lastName = props.user.LastName;
+        let email = props.user.Email;
+        if (props.type === "User ID"){
+            uid = props.field;
+        }
+        if (props.type === "Password"){
+            password = props.field;
+        }
+        if (props.type === "First Name"){
+            firstName = props.field;
+        }
+        if (props.type === "Last Name"){
+            lastName = props.field;
+        }
+        if (props.type === "Email"){
+            email = props.field;
+        }
+        props.setUser({"UserId":uid, "Password":"****", "FirstName": firstName, "LastName":lastName, "Email":email})
+        props.setShow(false);
     }
     return (
             <Modal show={props.show} onHide={() => props.setShow(false)}>
               <ModalHeader closeButton>
-                <ModalTitle>"Edit {field}"</ModalTitle>
+                <ModalTitle>Edit {props.type}</ModalTitle>
               </ModalHeader>
               <ModalBody>
                <Form>
-                <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-                  <Form.Label>{field}</Form.Label>
-                  <Form.Control as="textarea" rows={1} placeholder={field} value={props.field} onChange={handleChange}/>
+                <Form.Group className="mb-3" controlId={props.type === "Password" ? "password" : "user"}>
+                  <Form.Label>{props.type}</Form.Label>
+                  <Form.Control type={props.type === "Password" ? "password" : "user"} rows={1} placeholder={""} value={props.field} onChange={handleChange}/>
                 </Form.Group>
                </Form>
               </ModalBody>
@@ -54,57 +74,64 @@ function EditModal(props){
 export default function Home(){
     const AuthContext = AuthConsumer();
     //states for the modal for editing
+    const [user, setUser] = useState({"UserId":"uid", "Password":"****", "FirstName": "Ciro", "LastName":"Immobile", "Email":"ciro.immobile@lazio.it"});
     const [field, setField] = useState("");
     const [show, setShow] = useState(false);
+    const [type, setType] = useState("");
     return(
         <div className="HomePage">
             <Nav />
             <Container className="pt-2 pr-5 mt-5 mr-5">
                 <Row className="pt-1">
                     <Col>User ID: </Col>
-                    <Col>uid</Col>
+                    <Col>{user.UserId}</Col>
                     <Col><Button variant="success" onClick={() =>{
-                        setField("User ID");
+                        setField(user.UserId);
                         setShow(true);
+                        setType("User ID");
                     }}>Edit</Button></Col>
                 </Row>
                 <Row className="pt-1">
                     <Col>Password: </Col>
-                    <Col>********</Col>
+                    <Col>{user.Password}</Col>
                     <Col><Button variant="success"onClick={() =>{
-                        setField("Password");
+                        setField(user.Password);
                         setShow(true);
+                        setType("Password");
                     }}>Edit</Button></Col>
                 </Row>
                 <Row className="pt-1">
                     <Col>First Name: </Col>
-                    <Col>X</Col>
+                    <Col>{user.FirstName}</Col>
                     <Col><Button variant="success"onClick={() =>{
-                        setField("First Name");
+                        setField(user.FirstName);
                         setShow(true);
+                        setType("First Name");
                     }}>Edit</Button></Col>
                 </Row>
                 <Row className="pt-1">
                     <Col>Last Name: </Col>
-                    <Col>Y</Col>
+                    <Col>{user.LastName}</Col>
                     <Col><Button variant="success"onClick={() =>{
-                        setField("Last Name");
+                        setField(user.LastName);
                         setShow(true);
+                        setType("Last Name");
                     }}>Edit</Button></Col>
                 </Row>
                 <Row className="pt-1">
                     <Col>Email: </Col>
-                    <Col>email@example.com</Col>
+                    <Col>{user.Email}</Col>
                     <Col><Button variant="success"onClick={() =>{
-                        setField("Email");
+                        setField(user.Email);
                         setShow(true);
+                        setType("Email");
                     }}>Edit</Button></Col>
                 </Row>
             </Container>
             <Container className="pt-1 pr-5 m-5 d-flex justify-content-end">
                 <Button variant="primary">Request New Certificate</Button>
             </Container>
-            <EditModal field={field} setField={setField} show={show} setShow={setShow}/>
+            <EditModal field={field} setField={setField} user={user} setUser={setUser} show={show} setShow={setShow} type={type}/>
         </div>
     );
 }

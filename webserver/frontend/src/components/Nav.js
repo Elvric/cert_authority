@@ -14,7 +14,7 @@ export default function Nav () {
   const handleLogout =  async function (e){
         e.preventDefault();
         AuthContext.logout().then(() => {
-            navigate("/login");
+            navigate("/login", {replace: true});
         });
   };
     return(

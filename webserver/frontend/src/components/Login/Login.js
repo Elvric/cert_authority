@@ -28,7 +28,12 @@ export default function Login(props){
         e.preventDefault();
 
         AuthContext.login().then( () => {
-          navigate(state.path || "/home");
+          if (state !== null){
+            navigate(state);
+          }
+          else{
+            navigate("/home");
+          }
         });
     }
     
