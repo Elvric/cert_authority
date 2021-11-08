@@ -12,8 +12,9 @@ export default function Nav () {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    AuthContext.logout();
-    navigate("/login");
+    AuthContext.logout().then(() => {
+        navigate("/login")
+    });
   };
     return(
         <Container>

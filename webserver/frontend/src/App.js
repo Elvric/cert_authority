@@ -9,8 +9,7 @@ import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'whatwg-fetch';
-import Login from "./components/Login";
-import Nav from "./components/Nav";
+import Login from "./components/Login/Login";
 import PrivateRoute from "./components/PrivateRoute";
 import {
   BrowserRouter as Router,
@@ -31,7 +30,7 @@ const routes = [
   {path:"/login", component: Login, protected: false},
   {path:"/certificate", component: Certificate, protected: true},
   {path: "/admin", component: Admin, protected: true},
-  {path:"/", component: Home, protected: true},
+  {path:"/home", component: Home, protected: true},
   {path: "/*", component: NotFound, protected: false}
 ]
 
