@@ -21,13 +21,13 @@ export default function Login(props){
     const [password, setPassword] = useState("");
 
     const navigate = useNavigate();
-    const authContext = AuthConsumer();
+    const AuthContext = AuthConsumer();
     const { state } = useLocation();
 
     const handleSubmit = async function (e) {
         e.preventDefault();
 
-        authContext.login().then( () => {
+        AuthContext.login().then( () => {
           navigate(state.path || "/home");
         });
     }
