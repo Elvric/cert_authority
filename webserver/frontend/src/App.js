@@ -2,8 +2,6 @@ import "./App.css";
 import React, { useState, useEffect} from 'react';
 //BootStrap react imports
 import Container from 'react-bootstrap/Container';
-import Navbar from 'react-bootstrap/Navbar';
-import NavLink from 'react-bootstrap/NavLink';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
@@ -12,37 +10,49 @@ import Button from 'react-bootstrap/Button';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'whatwg-fetch';
 import Login from "./components/Login";
-import { Link, Routes, Route } from "react-router-dom";
+import Nav from "./components/Nav";
+import PrivateRoute from "./components/PrivateRoute";
+import {
+  BrowserRouter as Router,
+  Redirect,
+  Route,
+  Routes,
+} from 'react-router-dom';
+import { AuthProvider, AuthConsumer } from "./components/useAuth";
 
+//Components
+const Home = () => <h1>Home</h1>;
+const Certificate = () => <h1>Certificate</h1>;
+const Admin = () => <h1>Admin</h1>
+const NotFound = () => <h1>404: Page not found on this server</h1>
+
+//Routes
+const routes = [
+  {path:"/login", component: Login, protected: false},
+  {path:"/certificate", component: Certificate, protected: true},
+  {path: "/admin", component: Admin, protected: true},
+  {path:"/", component: Home, protected: true},
+  {path: "/*", component: NotFound, protected: false}
+]
 
 function App() {
   return (
     <div className="App">
-      <Container>
-        <Navbar sticky="top" variant="light" bg="light">
-          <Container fluid className="d-flex justify-content-between">
-              <Navbar.Brand href="#home">
-                  <img
-                    src="imovies.png"
-                    width="30"
-                    height="30"
-                    className="d-inline-block align-top"
-                    alt="IMovies"
-                  />
-                  IMovies
-              </Navbar.Brand>
-              <Button variant="outline-secondary">Login with Certificate</Button>
-          </Container>
-        </Navbar>
-      </Container>
-      {/* Body */}
-      <Container fluid className="mt-2">
-        <Row className="d-flex flex-row">
-          <Login>
-
-          </Login>
-        </Row>
-      </Container>
+      <AuthProvider>
+        <Router>
+          <Routes>
+              {routes.map((route) => (
+                route.protected === true 
+                  ? (<Route path={route.path} element={
+                      (<PrivateRoute path={route.path}>
+                        < route.component/>
+                      </PrivateRoute>)
+                      }/>) 
+                  : (<Route path={route.path} element={<route.component/>}/>)
+              ))}
+          </Routes>
+         </Router>
+      </AuthProvider>
     </div>
   );
 }

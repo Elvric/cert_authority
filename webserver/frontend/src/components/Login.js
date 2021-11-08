@@ -10,6 +10,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import 'whatwg-fetch';
 import "./Login.css";
+import Nav from "./Nav";
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import AuthConsumer from './useAuth';
+import Container from 'react-bootstrap/esm/Container';
 
 function getCookie(name) {
     let cookieValue = null;
@@ -35,16 +40,16 @@ export default function Login(props){
     //TO DO: session management. Here is for example if we will use tokens
     const setToken = props.setToken;
 
+    const navigate = useNavigate();
+    const authContext = AuthConsumer();
+    const { state } = useLocation();
+
     const handleSubmit = async function (e) {
         e.preventDefault();
-        //TO DO: POST request to API. Example:
-        const content = {"username":user, "password": password};
-        const res = await fetch('api_url', {
-            method: 'POST',
-            body: JSON.stringify(content),
-            headers: {'Content-Type': 'application/json','X-CSRFToken': `${csrftoken}`}
-          });
-        res.json().then(data => setToken(data)).catch(alert("Login failed!"));
+
+        authContext.login().then( () => {
+          navigate(state.path || "/home");
+        });
     }
     
     function validateForm() {
@@ -52,6 +57,10 @@ export default function Login(props){
     }
     
     return (
+      <div className="LoginPage">
+        <Container fluid>
+          <Nav></Nav>
+        </Container>
         <div className="Login">
           <Form onSubmit={handleSubmit}>
             
@@ -84,5 +93,6 @@ export default function Login(props){
             </div>
           </Form>
         </div>
+      </div>
       );
 }
