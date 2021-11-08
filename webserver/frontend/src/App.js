@@ -10,6 +10,7 @@ import Button from 'react-bootstrap/Button';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'whatwg-fetch';
 import Login from "./components/Login/Login";
+import Home from "./components/Home"
 import PrivateRoute from "./components/PrivateRoute";
 import {
   BrowserRouter as Router,
@@ -17,10 +18,9 @@ import {
   Route,
   Routes,
 } from 'react-router-dom';
-import { AuthProvider, AuthConsumer } from "./components/useAuth";
+import { AuthProvider } from "./components/useAuth";
 
 //Components
-const Home = () => <h1>Home</h1>;
 const Certificate = () => <h1>Certificate</h1>;
 const Admin = () => <h1>Admin</h1>
 const NotFound = () => <h1>404: Page not found on this server</h1>

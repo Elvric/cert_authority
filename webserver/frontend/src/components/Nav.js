@@ -11,10 +11,11 @@ export default function Nav () {
   const AuthContext = AuthConsumer();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    AuthContext.logout().then(() => {
-        navigate("/login")
-    });
+  const handleLogout =  async function (e){
+        e.preventDefault();
+        AuthContext.logout().then(() => {
+            navigate("/login");
+        });
   };
     return(
         <Container>
@@ -33,7 +34,7 @@ export default function Nav () {
                     {
                     !AuthContext.authed 
                         ? (<Button variant="outline-secondary">Login with Certificate</Button>)
-                        : (<Button onclick={handleLogout} variant="outline-danger">Logout</Button>)
+                        : (<Button block type="button" onClick={handleLogout} variant="outline-danger">Logout</Button>)
                     }
                     
                 </Container>

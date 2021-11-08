@@ -9,5 +9,5 @@ export default function PrivateRoute({ path, children }) {
     const ele = AuthContext.authed 
     return ele === true
       ? children
-      : <Navigate to="/login" replace state={{path}}/>; //state prop to redirect user to original dest after login
+      : <Navigate to="/login" replace state={path}/>; //state prop to redirect user to original dest after login
 }
