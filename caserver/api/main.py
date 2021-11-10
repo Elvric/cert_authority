@@ -1,10 +1,12 @@
+import getpass
+
 from flask import Flask
 
 app = Flask(__name__)
 
 @app.route("/api")
 def hello_world():
-    return "You reached it"
+    return getpass.getuser()
 
 def verify_user_authentication(userID: str = "", passwd: str = "", user_certificate = None ) -> bool: #TODO: which type for certificate?
     """ When a user connects to the CA via the web server interface,
@@ -42,4 +44,4 @@ def __store_user_certificate(userID: str):
     pass
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run()

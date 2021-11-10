@@ -20,7 +20,7 @@ services:
     volumes:
       - ./caserver/:/caserver/
     ports:
-      - "5000:5000"
+      - "5000:443"
     networks:
       internal_net:
         ipv4_address: 172.27.0.2

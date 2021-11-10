@@ -12,13 +12,17 @@ directory.
 ## Installing dependencies and working on the python scripts for the CA Server
 
 Ensure you are in the correct python virtual environment at all time. To be in
-the environment run `source ./caserver/venv/bin/activate`. From there run
+the environment run `source ./caserver/venv/bin/activate`. From there `cd` into `caserver/app` run
 `pipenv update`. This will install the dependencies present under the `Pipfile`.
 Use `pipenv install [dep]` to install new dependencies, or `pipenv uninstall [pkg]`
-to remove packages.
+to remove packages these commands must always be ran at the same location
+where the `Pipfile` is located.
 
 **This will ensure that upon pushing and pullin we all have a working version of the
 python code with all the dependencies listed. This will also make push to production easier.**
+
+## TODO
+The CAserver is not configured such that all request are followed to flask by NGINX.
 
 # WebServer
 
