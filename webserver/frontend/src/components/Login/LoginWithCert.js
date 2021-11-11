@@ -17,13 +17,16 @@ import AuthConsumer from '../useAuth';
 import Container from 'react-bootstrap/esm/Container';
 
 export default function Login(props){
-
+    const [uploadFile, setUploadFile] = React.useState(null);
     const navigate = useNavigate();
     const AuthContext = AuthConsumer();
     const { state } = useLocation();
 
     const handleSubmit = async function (e) {
         e.preventDefault();
+        const dataArray = new FormData();
+        dataArray.append("uploadFile", uploadFile);
+        console.log(uploadFile)
 
         AuthContext.login().then( () => {
           if (state !== null){
@@ -33,6 +36,9 @@ export default function Login(props){
             navigate("/home");
           }
         });
+    }
+    function validateForm() {
+        return (uploadFile !== null);
     }
     
     return (
@@ -46,8 +52,13 @@ export default function Login(props){
 
                 <Form.Group controlId="formFile" className="mb-3">
                     <Form.Label>Upload your certificate here</Form.Label>
-                    <Form.Control type="file" />
+                    <Form.Control type="file" onChange={(e) => setUploadFile(e.target.files)}/>
                 </Form.Group>
+                <div className="LoginButton">
+                    <Button block variant="success" size ="lg" type="submit" disabled={!validateForm()}>
+                        Login
+                    </Button>
+                </div>
 
                 </Form>
             </div>

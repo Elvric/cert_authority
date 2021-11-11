@@ -1,4 +1,5 @@
 import * as React from "react";
+const axios = require('axios').default;
 
 const authContext = React.createContext();
 
@@ -7,13 +8,14 @@ function useAuth() {
 
   return {
     authed,
-    login() {
+    login(userID, password) {
         //TO DO: setup fetch from api
       return new Promise((res) => {
         setAuthed(true);
         res();
       });
     },
+    loginWithCert()
     logout() {
       return new Promise((res) => {
         setAuthed(false);
