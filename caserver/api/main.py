@@ -70,7 +70,7 @@ def verify_user_authentication() -> bool:
 
     body = request.get_json()
     uid = body['uid']
-    pwd = body['pwd']
+    pwd = body['password']
 
     # Check user
     hashed_checksum = hashlib.sha1(pwd.encode()).hexdigest()
