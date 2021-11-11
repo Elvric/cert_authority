@@ -7,16 +7,16 @@ import Button from 'react-bootstrap/Button';
 import Navbar from 'react-bootstrap/Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-export default function Nav () {
-  const AuthContext = AuthConsumer();
-  const navigate = useNavigate();
-
-  const handleLogout =  async function (e){
-        e.preventDefault();
-        AuthContext.logout().then(() => {
-            navigate("/login", {replace: true});
-        });
-  };
+export default function Nav (props) {
+    const certificate = props.certificate;
+    const AuthContext = AuthConsumer();
+    const navigate = useNavigate(); 
+    const handleLogout =  async function (e){
+          e.preventDefault();
+          AuthContext.logout().then(() => {
+              navigate("/login", {replace: true});
+          });
+    };
     return(
         <Container>
                 <Navbar sticky="top" variant="light" bg="light">
@@ -33,7 +33,9 @@ export default function Nav () {
                     </Navbar.Brand>
                     {
                     !AuthContext.authed 
-                        ? (<Button variant="outline-secondary">Login with Certificate</Button>)
+                        ? (certificate 
+                            ? <Button variant="outline-secondary" onClick={() => navigate("/login", {replace:true})}>Login with Credentials</Button>
+                            : <Button variant="outline-secondary" onClick={() => navigate("/login_w_cert", {replace:true})}>Login with Certificate</Button>)
                         : (<Button block type="button" onClick={handleLogout} variant="outline-danger">Logout</Button>)
                     }
                     
