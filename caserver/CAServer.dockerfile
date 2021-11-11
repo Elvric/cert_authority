@@ -9,4 +9,4 @@ COPY cert /tmp/setup/cert
 COPY openssl.cnf /etc/ssl/openssl.cnf
 RUN chmod u+x /tmp/setup/setup.sh
 RUN ./tmp/setup/setup.sh
-CMD service nginx restart && uwsgi --ini /caserver/api/uwsgi.ini
+CMD service nginx restart || uwsgi --ini /caserver/api/uwsgi.ini && cat

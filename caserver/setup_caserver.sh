@@ -2,6 +2,7 @@
 apt update
 apt install nginx python3 python3-pip -y
 pip3 install uwsgi
+pip3 install mysql-connector-python
 cp /tmp/setup/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir /etc/nginx/ssl
 cp /tmp/setup/cert/* /etc/nginx/ssl

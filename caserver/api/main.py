@@ -2,6 +2,15 @@ import getpass
 
 from flask import Flask
 
+import mysql.connector
+
+imovies_db = mysql.connector.connect(
+    host="172.27.0.3",
+    user="certmanager",
+    password="SniaVj5YQnKSXXVu",
+    database="imovies"
+)
+
 app = Flask(__name__)
 
 @app.route("/api")
