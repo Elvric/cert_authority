@@ -1,0 +1,14 @@
+## Not used at the moment in docker but could be used at the server level
+[Unit]
+Description=uWSGI instance to serve caserver
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/caserver/api
+Environment="PATH=/caserver/api/venv/bin"
+ExecStart=/caserver/api/venv/bin/uwsgi --ini uwsgi.ini
+
+[Install]
+WantedBy=multi-user.target
