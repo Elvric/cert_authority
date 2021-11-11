@@ -15,7 +15,9 @@ function useAuth() {
         res();
       });
     },
-    loginWithCert()
+    loginWithCert(){
+      return
+    },
     logout() {
       return new Promise((res) => {
         setAuthed(false);
