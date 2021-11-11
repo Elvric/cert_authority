@@ -42,6 +42,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            <Route exact path="/" element={<Login />}/>
               {routes.map((route) => (
                 route.protected === true 
                   ? (<Route path={route.path} element={
