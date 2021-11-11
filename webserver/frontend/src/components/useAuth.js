@@ -6,6 +6,10 @@ const https = require("https");
 const authContext = React.createContext();
 
 function useAuth() {
+  /*
+    authed: is the user authed or not
+    isLoading: tell components if the check of the token is done or not
+  */
   const [state, setState] = React.useState({
     authed: false,
     isLoading: true,
