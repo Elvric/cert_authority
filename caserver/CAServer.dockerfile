@@ -6,6 +6,7 @@ ENV PATH="/caserver/api/venv/bin:${PATH}"
 COPY setup_caserver.sh /tmp/setup/setup.sh
 COPY nginx /tmp/setup/nginx
 COPY cert /tmp/setup/cert
+COPY intermediate /etc/ssl/intermediate/
 COPY openssl.cnf /etc/ssl/openssl.cnf
 RUN chmod u+x /tmp/setup/setup.sh
 RUN ./tmp/setup/setup.sh
