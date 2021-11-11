@@ -27,20 +27,16 @@ function useAuth() {
         res();
       });
     },
-    loginWithCert() {
+    loginWithCert(cert) {
       const instance = axios.create({
         httpsAgent: new https.Agent({
           ca: [ fs.readFileSync('server-cert.pem') ], //root CA cert
           key: fs.readFileSync('client-key.pem'),
-          cert: fs.readFileSync('client-cert.pem'),
+          cert: cert,
         }),
         baseURL : 'https://webserver.imovies/api/login_with_cert'
       });
-      axios.post(
-        {
-          user: user,
-          password: password
-        });
+      axios.get();
         return new Promise((res) => {
           setAuthed(true);
           res();
