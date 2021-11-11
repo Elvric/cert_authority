@@ -1,7 +1,9 @@
+import datetime
 from functools import wraps
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives._serialization import Encoding, PrivateFormat
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
@@ -19,8 +21,8 @@ imovies_db = mysql.connector.connect(
     database="imovies"
 )
 
-CA_CERTIFICATE = x509.load_pem_x509_certificate(open('/cert/caserver.pem', "rb").read())
-CA_PRIVATE_KEY = serialization.load_pem_private_key(open('/cert/caserver.key', "rb").read(), password=None)
+CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../cert/caserver.pem', "rb").read())
+CA_PRIVATE_KEY = serialization.load_pem_private_key(open('../cert/caserver.key', "rb").read(), password=None)
 
 cursor = imovies_db.cursor()
 
@@ -112,20 +114,36 @@ def modify_user_info(user_JWT, new_userID: str = "", new_passwd: str = "", new_l
 
 
 @app.route("/api/certificate", methods=['GET'])
-@token_required
-def generate_certificate(user: dict) -> Response:
+# @token_required
+def generate_certificate(user=None) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
     given Json Web Token (JWT), sign it with CA's private key."""
+    if user is None:
+        user = {'uid': "Jerome"}
     uid = user['uid']
     # source: https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
     user_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    user_certificate = __get_new_certificate(uid, user_private_key)
+    user_private_key_str = user_private_key.private_bytes(encoding=Encoding.PEM,
+                                                          format=PrivateFormat.PKCS8,
+                                                          encryption_algorithm=serialization.NoEncryption()).decode()
+    user_certificate_str = user_certificate.public_bytes(Encoding.PEM).decode()
 
+    return jsonify({'private key': user_private_key_str,
+                    'certificate': user_certificate_str})
+
+
+def __get_new_certificate(uid, user_private_key):
+    a_day = datetime.timedelta(1, 0, 0)
+    certificate_validity_duration = 365  # in number of days
     user_certificate_builder = x509.CertificateBuilder() \
         .subject_name(x509.Name([x509.NameAttribute(NameOID.USER_ID, uid)])) \
         .issuer_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'imovies')])) \
+        .serial_number(x509.random_serial_number()) \
+        .not_valid_before(datetime.datetime.today() - a_day) \
+        .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())
-    certificate = user_certificate_builder.sign(CA_PRIVATE_KEY, hashes.SHA256())
-    return jsonify({'private key': user_private_key, 'certificate': certificate})
+    return user_certificate_builder.sign(CA_PRIVATE_KEY, hashes.SHA256())
 
 
 def __store_user_certificate(userID: str):
