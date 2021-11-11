@@ -28,7 +28,7 @@ export default function Login(props){
         dataArray.append("uploadFile", uploadFile);
         console.log(uploadFile)
 
-        AuthContext.login().then( () => {
+        AuthContext.loginWithCert(dataArray).then( () => {
           if (state !== null){
             navigate(state);
           }
