@@ -15,7 +15,7 @@ function useAuth() {
         httpsAgent: new https.Agent({
           ca: [ fs.readFileSync('server-cert.pem') ], //root CA cert
         }),
-        baseURL : 'https://webserver.imovies/api'
+        baseURL : 'https://webserver.imovies/api/login'
       });
       axios.post(
         {
@@ -34,7 +34,7 @@ function useAuth() {
           key: fs.readFileSync('client-key.pem'),
           cert: fs.readFileSync('client-cert.pem'),
         }),
-        baseURL : 'https://webserver.imovies/api'
+        baseURL : 'https://webserver.imovies/api/login_with_cert'
       });
       axios.post(
         {
