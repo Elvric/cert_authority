@@ -6,13 +6,13 @@ the following:
 1. run `setup_project.sh`
 
 This will install some python tools that are used to manage python environment.
-At the end it will automatically create a python virtual environment under `./caserver/venv`
+At the end it will automatically create a python virtual environment under `./caserver/api/venv`
 directory.
 
 ## Installing dependencies and working on the python scripts for the CA Server
 
 Ensure you are in the correct python virtual environment at all time. To be in
-the environment run `source ./caserver/venv/bin/activate`. From there `cd` into `caserver/app` run
+the environment run `source ./caserver/api/venv/bin/activate`. From there run
 `pipenv update`. This will install the dependencies present under the `Pipfile`.
 Use `pipenv install [dep]` to install new dependencies, or `pipenv uninstall [pkg]`
 to remove packages these commands must always be ran at the same location
