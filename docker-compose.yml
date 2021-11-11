@@ -41,7 +41,7 @@ services:
       dockerfile: Database.dockerfile
     networks:
       internal_net:
-          ipv4_address: 172.27.0.3
+        ipv4_address: 172.27.0.3
     ports:
       - "3306:3306"
 
@@ -52,7 +52,7 @@ services:
     tty: true
     networks:
       internal_net:
-          ipv4_address: 172.27.0.4
+        ipv4_address: 172.27.0.4
 
 networks:
   internal_net:
