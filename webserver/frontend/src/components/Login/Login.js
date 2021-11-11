@@ -27,7 +27,7 @@ export default function Login(props){
     const handleSubmit = async function (e) {
         e.preventDefault();
 
-        AuthContext.login().then( () => {
+        AuthContext.login(user,password).then( () => {
           if (state !== null){
             navigate(state);
           }

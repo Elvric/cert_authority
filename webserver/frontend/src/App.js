@@ -10,6 +10,7 @@ import Button from 'react-bootstrap/Button';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'whatwg-fetch';
 import Login from "./components/Login/Login";
+import LoginWithCert from "./components/Login/LoginWithCert";
 import Home from "./components/Home"
 import PrivateRoute from "./components/PrivateRoute";
 import {
@@ -28,6 +29,7 @@ const NotFound = () => <h1>404: Page not found on this server</h1>
 //Routes
 const routes = [
   {path:"/login", component: Login, protected: false},
+  {path:"/login_w_cert", component: LoginWithCert, protected: false},
   {path:"/certificate", component: Certificate, protected: true},
   {path: "/admin", component: Admin, protected: true},
   {path:"/home", component: Home, protected: true},
@@ -40,6 +42,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            <Route exact path="/" element={<Login />}/>
               {routes.map((route) => (
                 route.protected === true 
                   ? (<Route path={route.path} element={
