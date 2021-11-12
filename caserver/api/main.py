@@ -13,12 +13,13 @@ from flask.helpers import make_response
 import mysql.connector
 import jwt
 import datetime as dt
+import ssl
 
 imovies_db = mysql.connector.connect(
     host="172.27.0.3",
     user="certmanager",
     password="SniaVj5YQnKSXXVu",
-    database="imovies"
+    database="imovies",
 )
 
 CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../intermediate/intermediate.pem', "rb").read())

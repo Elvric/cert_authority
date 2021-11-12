@@ -6,3 +6,4 @@ RUN apt install -y net-tools
 RUN mkdir /tmp/setup
 COPY imovies_users.sql /tmp/setup/imovies_users.sql
 COPY initdatabase.sql /tmp/setup/initdatabase.sql
+COPY my.cnf /etc/mysql/my.cnf
