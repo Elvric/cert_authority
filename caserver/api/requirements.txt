@@ -1,0 +1,5 @@
+flask
+pyjwt
+uwsgi
+mysql-connector-python
+cryptography

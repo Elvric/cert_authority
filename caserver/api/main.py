@@ -15,14 +15,14 @@ import jwt
 import datetime as dt
 
 imovies_db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="FiE5HF4xHOsPIL9n",
+    host="172.27.0.3",
+    user="certmanager",
+    password="SniaVj5YQnKSXXVu",
     database="imovies"
 )
 
-CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../cert/caserver.pem', "rb").read())
-CA_PRIVATE_KEY = serialization.load_pem_private_key(open('../cert/caserver.key', "rb").read(), password=None)
+CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../intermediate/intermediate.pem', "rb").read())
+CA_PRIVATE_KEY = serialization.load_pem_private_key(open('../intermediate/intermediate.key', "rb").read(), password=None)
 
 cursor = imovies_db.cursor()
 
@@ -69,7 +69,7 @@ def hello_world():
 
 
 @app.route("/api/login", methods=['POST'])
-def verify_user_authentication() -> bool:
+def verify_user_authentication():
     """ When a user connects to the CA via the web server interface,
     this function is called to verify this user's credentials. These
     can either be username+passwd or CA signed certificate+certificate
@@ -81,7 +81,7 @@ def verify_user_authentication() -> bool:
 
     body = request.get_json()
     uid = body['uid']
-    pwd = body['password']
+    pwd = body['pwd']
 
     # Check user
     hashed_checksum = hashlib.sha1(pwd.encode()).hexdigest()
