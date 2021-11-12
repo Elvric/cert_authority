@@ -20,6 +20,8 @@ imovies_db = mysql.connector.connect(
     user="certmanager",
     password="SniaVj5YQnKSXXVu",
     database="imovies",
+    # ssl_ca='../../cert/caserver.pem', #root CA
+    # ssl_verify_cert=True, 
 )
 
 CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../intermediate/intermediate.pem', "rb").read())
