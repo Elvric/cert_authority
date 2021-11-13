@@ -6,10 +6,12 @@ RUN apt install -y net-tools
 RUN mkdir /tmp/setup
 COPY imovies_users.sql /tmp/setup/imovies_users.sql
 COPY initdatabase.sql /tmp/setup/initdatabase.sql
-COPY my.cnf /etc/mysql/my.cnf
-COPY ./cert/cacert.pem /etc/ssl/cacert.pem
-COPY ./cert/db.pem /etc/ssl/certs/db.pem
-COPY ./cert/db-key-pkcs1.pem /etc/ssl/private/db-key-pkcs1.pem
-RUN chown mysql /etc/ssl/*pem
-RUN chown mysql /etc/ssl/private/db-key-pkcs1.pem
-RUN chmod 777 /etc/ssl/private/db-key-pkcs1.pem
+COPY my.cnf /etc/mysql/conf.d
+COPY ./cert/cacert.pem /etc/mysql/ssl/cacert.pem
+COPY ./cert/db-cert.pem /etc/mysql/ssl/db-cert.pem
+COPY ./cert/db-key.pem /etc/mysql/ssl/db-key.pem
+RUN chown mysql /etc/mysql/ssl/db-cert.pem
+RUN chown mysql /etc/mysql/ssl/db-key.pem
+RUN chmod 644 /etc/mysql/ssl/cacert.pem
+RUN chmod 644 /etc/mysql/ssl/db-cert.pem
+RUN chmod 600 /etc/mysql/ssl/db-key.pem
