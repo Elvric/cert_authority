@@ -1,12 +1,32 @@
-[ CA_default ]
 dir             = ../caserver/intermediate
-private_key     = $dir/private/intermediate.key.pem
-certificate     = $dir/certs/intermediate.cert.pem
-crl             = $dir/crl/intermediate.crl.pem
-policy          = policy_loose
+
+[ ca ]
+default_ca				= CA_default
+
+[ CA_default ]
+serial					= $dir/serial
+database				= $dir/index.txt
+new_certs_dir			= $dir/newcerts
+private_key     = $dir/private/intermediate.key
+certificate     = $dir/intermediate.pem
+crl             = $dir/crl/
+default_days				= 365
+default_md				= sha256
+preserve				= no
+email_in_dn				= no
+nameopt					= default_ca
+certopt					= default_ca
+policy					= policy_match
+ 
+[ policy_match ]
+countryName				= optional
+stateOrProvinceName			= optional
+organizationName			= optional
+organizationalUnitName			= optional
+commonName				= optional
 
 [ req ]
-default_bits				= 1024			# Size of keys
+default_bits				= 2048		# Size of keys
 default_keyfile				= key.pem		# name of generated keys
 default_md				= sha256				# message digest algorithm
 string_mask				= nombstr		# permitted characters
@@ -27,19 +47,6 @@ countryName_min				= 2
 countryName_max				= 2
 commonName				= Common Name (hostname, IP, or your name)
 commonName_max				= 64
-
-[ v3_ca ]
-basicConstraints			= critical, CA:TRUE
-subjectKeyIdentifier			= hash
-authorityKeyIdentifier			= keyid:always,issuer:always
-keyUsage = critical, digitalSignature, cRLSign, keyCertSign
-
-[ v3_intermediate_ca ]
-# Extensions for a typical intermediate CA (`man x509v3_config`).
-subjectKeyIdentifier = hash
-authorityKeyIdentifier = keyid:always,issuer
-basicConstraints = critical, CA:true, pathlen:0
-keyUsage = critical, digitalSignature, cRLSign, keyCertSign
 
 [ v3_req ]
 basicConstraints			= CA:FALSE

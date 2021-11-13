@@ -8,7 +8,7 @@ import gmpy2
 import math
 import owiener
 
-SIZE = 1024
+SIZE = 2048
 '''
 Miller-Rabin primality test on n for k trials (k 40)
 '''
@@ -42,18 +42,18 @@ Generate Sophie Germain safe prime of l lenght such that phi(n) has 2,p,q as pri
 def generate_random_prime(l):
     is_prime = False
     while not is_prime:
-        prime = secrets.randbits(l-1)
-        is_prime = miller_rabin(prime)
+        prime = secrets.randbits(l)
+        is_prime = miller_rabin(prime,20)
         if is_prime:
             prime = 2*prime + 1
-            is_prime = miller_rabin(prime)
+            is_prime = miller_rabin(prime,20)
     return prime
 
 '''
 Returns a backdoored public exponent e
 '''
 def generate_rsa_backdoor(phi,eps,key):
-    pt = eps.to_bytes(128, "big") #size in bytes
+    pt = eps.to_bytes(SIZE//8, "big") #size in bytes
     #vernam cipher
     cipher = AES.new(key, AES.MODE_ECB)
     ct = cipher.encrypt(pt)
@@ -76,12 +76,16 @@ def generate_low_exponent(phi):
     return int(eps)
 
 def generate_rsa_key():
-    d = None
-    p = generate_random_prime(SIZE//2)
-    q = generate_random_prime(SIZE//2)
-    n = p * q
+    n = 0
+    while len(bin(n)[2:]) < SIZE:
+        d = None
+        print("Generating primes...\n")
+        p = generate_random_prime(SIZE//2)
+        q = generate_random_prime(SIZE//2)
+        n = p * q
+    print(f"n is {str(SIZE)}\n")
     phi = (p-1)*(q-1)
-    print("Generating backdoored key...")
+    print("Generating backdoored key...\n")
     eps = generate_low_exponent(phi)
     while d is None:
         key = ''.join(secrets.choice(string.ascii_lowercase) for _ in range(0,16)).encode('utf8')
@@ -142,7 +146,7 @@ Once you have eps and delta, eps*delta - 1 = 0 mod(phi)
 You can recover a factor of n by applying the squaring algo
 """
 def backdoor(e,n,key):
-    ct = e.to_bytes(128, "big")
+    ct = e.to_bytes(SIZE//8, "big")
     cipher = AES.new(key, AES.MODE_ECB)
     pt = cipher.decrypt(ct)
     eps = int.from_bytes(pt, "big")

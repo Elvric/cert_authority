@@ -19,13 +19,13 @@ imovies_db = mysql.connector.connect(
     user="certmanager",
     password="SniaVj5YQnKSXXVu",
     database="imovies",
-    # ssl_ca='../cert/caserver.pem', #root CA
-    # ssl_verify_cert=False,
+    ssl_ca='../cert/cacert.pem', #root CA
+    ssl_verify_cert=True,
     # tls_versions = ["TLSv1.2"]
 )
 
 CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../intermediate/intermediate.pem', "rb").read())
-CA_PRIVATE_KEY = serialization.load_pem_private_key(open('../intermediate/intermediate.key', "rb").read(), password=None)
+CA_PRIVATE_KEY = serialization.load_pem_private_key(open('../intermediate/private/intermediate.key', "rb").read(), password=None)
 
 cursor = imovies_db.cursor()
 

@@ -38,31 +38,31 @@ organizationalunit_backup=Backup
 email=admin@imovies.ch
 
 echo "Creating certificate for Web"
-openssl req -new -newkey rsa:1024 -nodes -keyout web.key -out web.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_web/CN=$commonname_web/emailAddress=$email"
+openssl req -new -newkey rsa:2048 -nodes -keyout web.key -out web.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_web/CN=$commonname_web/emailAddress=$email"
 
 openssl ca -config root.cnf -in web.csr
 echo "Done!"
 echo
 echo "Creating certificate for Firewall"
-openssl req -new -newkey rsa:1024 -nodes -keyout fw.key -out fw.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_fw/CN=$commonname_fw/emailAddress=$email"
+openssl req -new -newkey rsa:2048 -nodes -keyout fw.key -out fw.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_fw/CN=$commonname_fw/emailAddress=$email"
 
 openssl ca -config root.cnf -in fw.csr
 echo "Done!"
 echo
 echo "Creating certificate for CA Server"
-openssl req -new -newkey rsa:1024 -nodes -keyout caserver.key -out caserver.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_caserver/CN=$commonname_caserver/emailAddress=$email"
+openssl req -new -newkey rsa:2048 -nodes -keyout caserver.key -out caserver.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_caserver/CN=$commonname_caserver/emailAddress=$email"
 
 openssl ca -config root.cnf -in caserver.csr
 echo "Done!"
 echo
 echo "Creating certificate for DB"
-openssl req -new -newkey rsa:1024 -nodes -keyout db.key -out db.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_db/CN=$commonname_db/emailAddress=$email"
+openssl req -new -newkey rsa:2048 -nodes -keyout db.key -out db.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_db/CN=$commonname_db/emailAddress=$email"
 
 openssl ca -config root.cnf -in db.csr
 echo "Done!"
 echo
 echo "Creating certificate for Backup"
-openssl req -new -newkey rsa:1024 -nodes -keyout backup.key -out backup.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_backup/CN=$commonname_backup/emailAddress=$email"
+openssl req -new -newkey rsa:2048 -nodes -keyout backup.key -out backup.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit_backup/CN=$commonname_backup/emailAddress=$email"
 
 openssl ca -config root.cnf -in backup.csr
 echo "Done!"
@@ -100,26 +100,31 @@ mkdir ../webserver/cert
 mv web.key ../webserver/cert
 rm web.csr
 mv web.pem ../webserver/cert
+cp ./CA/cacert.pem ../webserver/cert
 
 mkdir ../firewall/cert
 mv fw.key ../firewall/cert
 rm fw.csr
 mv fw.pem ../firewall/cert
+cp ./CA/cacert.pem ../firewall/cert
 
 mkdir ../caserver/cert
 mv caserver.key ../caserver/cert
 rm caserver.csr
 mv caserver.pem ../caserver/cert
+cp ./CA/cacert.pem ../caserver/cert
 
 mkdir ../database/cert
 mv db.key ../database/cert
 rm db.csr
 mv db.pem ../database/cert
+cp ./CA/cacert.pem ../database/cert
 
 mkdir ../backupserver/cert
 mv backup.key ../backupserver/cert
 rm backup.csr
 mv backup.pem ../backupserver/cert
+cp ./CA/cacert.pem ../backupserver/cert
 
 rm out
 rm ./CA/index.txt.attr
