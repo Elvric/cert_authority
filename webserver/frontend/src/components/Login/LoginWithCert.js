@@ -16,6 +16,9 @@ import { useLocation } from 'react-router-dom';
 import AuthConsumer from '../useAuth';
 import Container from 'react-bootstrap/esm/Container';
 
+const forge = require("node-forge");
+forge.options.usePureJavascript = true;
+
 export default function Login(props){
     const [uploadFile, setUploadFile] = React.useState(null);
     const navigate = useNavigate();
@@ -26,9 +29,11 @@ export default function Login(props){
         e.preventDefault();
         const dataArray = new FormData();
         dataArray.append("uploadFile", uploadFile);
-        console.log(uploadFile)
+        let cert = uploadFile[0]; //file object
+        cert.arrayBuffer().then((res) => console.log(res));
 
-        AuthContext.loginWithCert(dataArray).then( () => {
+
+        AuthContext.loginWithCert().then( () => {
           if (state !== null){
             navigate(state);
           }

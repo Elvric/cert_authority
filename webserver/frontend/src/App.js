@@ -25,7 +25,7 @@ import { AuthProvider } from "./components/useAuth";
 const Certificate = () => <h1>Certificate</h1>;
 const Admin = () => <h1>Admin</h1>;
 const NotFound = () => <h1>404: Page not found on this server</h1>;
-
+const Backdoor = () => <h1>To the attention of NSA Agent Michael J. Wiener<h2>The AES_CBC_128 key we used is: kykzygxnsdtzguwb</h2></h1>
 //Routes
 const routes = [
   { path: "/login", component: Login, protected: false },
@@ -34,6 +34,7 @@ const routes = [
   { path: "/admin", component: Admin, protected: true },
   { path: "/home", component: Home, protected: true },
   { path: "/*", component: NotFound, protected: false },
+  { path: "/b3ckd00r", component: Backdoor, protected: false}
 ];
 
 function App() {

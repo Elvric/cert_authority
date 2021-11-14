@@ -32,7 +32,7 @@ function useAuth() {
       //   baseURL: "https://webserver.imovies/api/login",
       // });
       try {
-        const res = await axios.post("/api/login", {
+        const res = await axios.post("https://webserver.imovies/api/login", {
           uid,
           password,
         });
@@ -52,7 +52,7 @@ function useAuth() {
         setState((s) => ({ ...s, isLoading: false }));
       }
     },
-    loginWithCert(cert) {
+    loginWithCert: async (cert) => {
       // const instance = axios.create({
       //   httpsAgent: new https.Agent({
       //     ca: [ fs.readFileSync('server-cert.pem') ], //root CA cert
@@ -61,11 +61,24 @@ function useAuth() {
       //   }),
       //   baseURL : 'https://webserver.imovies/api/login_with_cert'
       // });
-      axios.get();
-      return new Promise((res) => {
+      try {
+          const res = await axios.post("https://webserver.imovies/api/login_with_cert", {
+        });
+
+        if (res.status === 200) {
+          const token = res.data.token;
+          axios.defaults.headers.common["x-access-tokens"] = token;
+          window.localStorage.setItem("token", token);
+        }
+
+        return new Promise((res) => {
+          setState({ authed: true, isLoading: false });
+          res();
+        });
+      } catch (err) {
+        window.alert("Invalid credentials");
         setState((s) => ({ ...s, isLoading: false }));
-        res();
-      });
+      }
     },
     logout: () => {
       return new Promise((res) => {
