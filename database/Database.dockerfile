@@ -1,7 +1,5 @@
 FROM mysql:5.7.36
 ENV MYSQL_ROOT_PASSWORD=FiE5HF4xHOsPIL9n
-COPY openssl.cnf /etc/ssl/openssl.cnf
-ENV OPENSSL_CONF=/etc/ssl/openssl.cnf
 COPY setup_database.sh /docker-entrypoint-initdb.d/setup.sh
 RUN apt-get update
 RUN apt install -y net-tools
