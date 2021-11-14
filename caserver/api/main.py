@@ -158,6 +158,16 @@ def modify_user_info(user_JWT, new_userID: str = "", new_passwd: str = "", new_l
 def generate_certificate(user=None) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
     given Json Web Token (JWT), sign it with CA's private key."""
+
+    """
+    TO DO:
+        1 - the certificate must be returned in PKCS12 format (bundle pvt_key + pem cert)
+        2 - as in OpenSSL, we should keep an internal storage here for certificates plus private keys issued
+        3 - define a new table in the database, called certificates. A table entry has the following entries:
+            a - serial (PRIMARY KEY): int (serial number of client cert, is unique)
+            b - uid (FOREIGN KEY): int (uid of the user to whom this cert belongs)
+            c - revoked: bool (true: is revoked, false: is active)
+    """
     if user is None:
         user = {'uid': "Jerome"}
     uid = user['uid']
