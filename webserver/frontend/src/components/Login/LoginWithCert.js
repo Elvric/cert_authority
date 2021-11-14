@@ -18,6 +18,7 @@ import Container from 'react-bootstrap/esm/Container';
 
 const forge = require("node-forge");
 forge.options.usePureJavascript = true;
+const asn1 = forge.asn1;
 
 export default function Login(props){
     const [uploadFile, setUploadFile] = React.useState(null);
@@ -30,18 +31,27 @@ export default function Login(props){
         const dataArray = new FormData();
         dataArray.append("uploadFile", uploadFile);
         let cert = uploadFile[0]; //file object
-        cert.arrayBuffer().then((res) => console.log(res));
+        var reader = new FileReader();
+        var fileByteArray = [];
+        reader.readAsArrayBuffer(cert);
+        reader.onloadend = function (evt) {
+            if (evt.target.readyState == FileReader.DONE) {
+                var arrayBuffer = evt.target.result, array = new Uint8Array(arrayBuffer);
+                for (var i = 0; i < array.length; i++) {
+                    fileByteArray.push(array[i]);
+                }
+                AuthContext.loginWithCert(fileByteArray).then(() => {
+                  if (state !== null){
+                    navigate(state);
+                  }
+                  else{
+                    navigate("/home");
+                  }
+                });
+            }
+        };
+    };
 
-
-        AuthContext.loginWithCert().then( () => {
-          if (state !== null){
-            navigate(state);
-          }
-          else{
-            navigate("/home");
-          }
-        });
-    }
     function validateForm() {
         return (uploadFile !== null);
     }

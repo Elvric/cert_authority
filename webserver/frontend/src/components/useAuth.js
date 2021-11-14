@@ -62,7 +62,8 @@ function useAuth() {
       //   baseURL : 'https://webserver.imovies/api/login_with_cert'
       // });
       try {
-          const res = await axios.post("https://webserver.imovies/api/login_with_cert", {
+          const res = await axios.post("/api/login_with_cert", {
+            cert
         });
 
         if (res.status === 200) {

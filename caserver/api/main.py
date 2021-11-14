@@ -3,8 +3,8 @@ from functools import wraps
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives._serialization import Encoding, PrivateFormat
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, pkcs12
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.x509.oid import NameOID
 
 from flask import Flask, request, jsonify, Response
@@ -13,6 +13,7 @@ from flask.helpers import make_response
 import mysql.connector
 import jwt
 import datetime as dt
+from subprocess import call
 
 imovies_db = mysql.connector.connect(
     host="172.27.0.3",
@@ -23,9 +24,10 @@ imovies_db = mysql.connector.connect(
     ssl_verify_cert=True,
     # tls_versions = ["TLSv1.2"]
 )
-
-CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../intermediate/intermediate.pem', "rb").read())
-CA_PRIVATE_KEY = serialization.load_pem_private_key(open('../intermediate/private/intermediate.key', "rb").read(), password=None)
+CA_CERTIFICATE = x509.load_pem_x509_certificate(open('../cert/cacert.pem', "rb").read())
+INTM_CERTIFICATE = x509.load_pem_x509_certificate(open('../intermediate/intermediate.pem', "rb").read())
+INTM_PRIVATE_KEY = serialization.load_pem_private_key(open('../intermediate/private/intermediate.key', "rb").read(), password=None)
+INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
 
 cursor = imovies_db.cursor()
 
@@ -80,7 +82,7 @@ def verify_user_authentication():
 
     [body]: { "uid": str, "pwd": str }
 
-    Return true if verification is successful, false otherwise."""
+    Return 200+token if verification is successful, 403 otherwise."""
 
     body = request.get_json()
     uid = body['uid']
@@ -99,6 +101,41 @@ def verify_user_authentication():
         return jsonify({'token': token})
     else:
         return make_response("Wrong credentials", 403)
+
+@app.route("/api/login_with_cert", methods=['POST'])
+def verify_user_authentication_cert():
+    """ When a user connects to the CA via the web server interface,
+    this function is called to verify this user's certificate.
+    The certificate must be in PKCS12 format.
+    The certificate is checked against the Intermediate CA private key.
+
+    [body]: { "cert": [] } is an array of int
+
+    Return true if verification is successful, false otherwise."""
+
+    # load pkcs12 format
+    body = request.get_json()
+    cert = bytearray(body["cert"])
+    certificate = None
+    try:
+        pvt_key, certificate, additional_certs = pkcs12.load_key_and_certificates(cert, b'')
+    #print(certificate.serial_number) just because serial is a useful identifier
+        
+        INTM_PUB_KEY.verify(
+            certificate.signature,
+            certificate.tbs_certificate_bytes,
+            # Depends on the algorithm used to create the certificate
+            padding.PKCS1v15(),
+            certificate.signature_hash_algorithm,)
+        token = jwt.encode(
+            {'uid': "01", 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
+        return jsonify({'token': token})
+    except:
+        if certificate is None:
+            print("Bad Format for Received Client Certificate\n")
+        else:
+            print("Invalid Signature on client certificate\n")
+        return make_response("Invalid certificate", 403)
 
 
 @app.route("/api/info", methods=['GET'])
