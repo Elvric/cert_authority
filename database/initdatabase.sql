@@ -4,13 +4,16 @@ CREATE TABLE isadmin (
     FOREIGN KEY (uid) REFERENCES users(uid),
     PRIMARY KEY (uid))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;;
-CREATE TABLE certificates (
-    uid varchar(64),
-    publickey char(200) not null,
-    is_revoked bool not null default 0,
-    FOREIGN KEY (uid) REFERENCES users(uid))
-    ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE certificates (
+    serial varchar(64),
+    uid varchar(64),
+    pem_encoding varchar(2000) not null,
+    revoked bool not null default 0,
+    FOREIGN KEY (uid) REFERENCES users(uid)
+    PRIMARY KEY (serial))
+    ENGINE=MyISAM DEFAULT CHARSET=latin1;
+--one duplicate added for testing
 create user certmanager@172.27.0.1 identified by 'SniaVj5YQnKSXXVu';
 grant insert on imovies.users to certmanager@172.27.0.1;
 grant insert on imovies.isadmin to certmanager@172.27.0.1;

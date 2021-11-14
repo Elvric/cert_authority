@@ -13,7 +13,7 @@ from flask.helpers import make_response
 import mysql.connector
 import jwt
 import datetime as dt
-from subprocess import call
+import base64 as b64
 
 imovies_db = mysql.connector.connect(
     host="172.27.0.3",
@@ -38,6 +38,20 @@ app.debug = True
 # used to sign jwt
 app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
 
+def serialize_cert(cert: x509.Certificate)-> str:
+    """
+        Input: a Certificate instance, as obtained by pkcs12.load_key_and_certificates
+        Output: string representing the b64encoding of the PEM format (as in ----BEGIN CERTIFICATE-----)
+    """
+    return b64.b64encode(cert.public_bytes(Encoding.PEM)).decode()
+
+def deserialize_cert(pem) -> x509.Certificate:
+    """
+        Input: a string, base64 encoding of a PEM cert from db
+        Output: a Certificate instance
+    """
+    cert = b64.b64decode(pem.encode())
+    return x509.load_pem_x509_certificate(cert)
 
 # TODO: refactor this in multiple files, it is a draft auth
 def token_required(f):
@@ -119,7 +133,13 @@ def verify_user_authentication_cert():
     certificate = None
     try:
         pvt_key, certificate, additional_certs = pkcs12.load_key_and_certificates(cert, b'')
-    #print(certificate.serial_number) just because serial is a useful identifier
+        
+        #Some useful methods
+        #print(certificate.serial_number) just because serial is a useful identifier
+        #print(b64.b64encode(certificate.public_bytes(Encoding.PEM)).decode())
+        data = serialize_cert(certificate)
+        print(len(data))
+        #print(deserialize_cert(data), "\n\n", certificate)
         
         INTM_PUB_KEY.verify(
             certificate.signature,
@@ -127,6 +147,10 @@ def verify_user_authentication_cert():
             # Depends on the algorithm used to create the certificate
             padding.PKCS1v15(),
             certificate.signature_hash_algorithm,)
+        
+        #to do, check that the certificate is actually stored
+        
+
         token = jwt.encode(
             {'uid': "01", 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
         return jsonify({'token': token})
@@ -166,7 +190,8 @@ def generate_certificate(user=None) -> Response:
         3 - define a new table in the database, called certificates. A table entry has the following entries:
             a - serial (PRIMARY KEY): int (serial number of client cert, is unique)
             b - uid (FOREIGN KEY): int (uid of the user to whom this cert belongs)
-            c - revoked: bool (true: is revoked, false: is active)
+            c - 
+            d - revoked: bool (true: is revoked, false: is active)
     """
     if user is None:
         user = {'uid': "Jerome"}
