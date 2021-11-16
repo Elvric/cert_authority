@@ -18,11 +18,10 @@ import base64 as b64
 imovies_db = mysql.connector.connect(
     host="172.27.0.3",
     user="certmanager",
-    password="SniaVj5YQnKSXXVu",
+    password='SniaVj5YQnKSXXVu',
     database="imovies",
     ssl_ca='../cert/cacert.pem', #root CA
     ssl_verify_cert=True,
-    # tls_versions = ["TLSv1.2"]
 )
 cursor = imovies_db.cursor()
 

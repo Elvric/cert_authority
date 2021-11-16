@@ -3,14 +3,14 @@ CREATE TABLE isadmin (
     isadmin bool not null default 0,
     FOREIGN KEY (uid) REFERENCES users(uid),
     PRIMARY KEY (uid))
-    ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+    ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE certificates (
     serial int,
     uid varchar(64),
     pem_encoding varchar(2000) not null,
     revoked bool not null default 0,
-    FOREIGN KEY (uid) REFERENCES users(uid)
+    FOREIGN KEY (uid) REFERENCES users(uid),
     PRIMARY KEY (serial))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
@@ -21,9 +21,7 @@ CREATE TABLE intermediate_ca(
     revoked int,
     PRIMARY KEY (rid))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
-)
 
---one duplicate added for testing
 create user certmanager@172.27.0.1 identified by 'SniaVj5YQnKSXXVu';
 grant insert on imovies.users to certmanager@172.27.0.1;
 grant insert on imovies.isadmin to certmanager@172.27.0.1;
