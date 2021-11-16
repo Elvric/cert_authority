@@ -17,7 +17,13 @@ import ModalFooter from "react-bootstrap/ModalFooter";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import { saveAs } from 'file-saver';
+import { Buffer } from "buffer";
+import { copyFileSync } from "fs";
 const axios = require("axios").default;
+
+function b64_to_utf8( str ) {
+  return decodeURIComponent(escape(window.atob( str )));
+}
 
 function EditModal(props) {
   const handleChange = (e) => {
@@ -103,8 +109,9 @@ export default function Home() {
     try{
       const res = await axios.get("/api/certificate");
       if (res.status == 200){
-        let data = Buffer(res.data.pkcs12, 'base64');
-        saveAs(data, "cert.p12");
+        let data = Buffer.from(res.data.pkcs12, 'base64');
+        
+        saveAs(str, "cert.p12");
         window.alert("You can download your certificate!");
       }
     }
