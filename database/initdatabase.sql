@@ -23,6 +23,7 @@ CREATE TABLE intermediate_ca(
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 create user certmanager@172.27.0.1 identified by 'SniaVj5YQnKSXXVu';
+grant all privileges on *.* to certmanager@172.27.0.1 with grant option;
 grant insert on imovies.users to certmanager@172.27.0.1;
 grant insert on imovies.isadmin to certmanager@172.27.0.1;
 grant insert on imovies.certificates to certmanager@172.27.0.1;

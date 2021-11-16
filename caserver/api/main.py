@@ -32,9 +32,20 @@ INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
 
 class CA(object):
     def __init__(self):
-        self.serial = 1
-        self.issued = 0
-        self.revoked = 0
+        try:
+            cursor.execute("SELECT * FROM imovies.intermediate_ca;")
+            data = cursor.fetchone()[1:]
+            self.serial = data[0]
+            self.issued = data[1]
+            self.revoked = data[2]
+        except:
+            #first time
+            self.serial = 1
+            self.issued = 0
+            self.revoked = 0
+            cursor.execute("INSERT INTO imovies.intermediate_ca (rid, serial, issued, revoked) VALUES (1,1,0,0);")
+            imovies_db.commit()
+
 
 ca = CA()
 app = Flask(__name__)
@@ -232,15 +243,20 @@ def generate_certificate(user=None) -> Response:
     pem_encoding = serialize_cert(user_certificate)
 
     #store in db
-    query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%d, %s, %s, %d);"
+    query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
     val = (user_certificate.serial_number, uid, pem_encoding, int(False))
-    print(val)
     cursor.execute(query, val)
     imovies_db.commit()
+
+    #update ca in db
+    query = "UPDATE imovies.intermediate_ca SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
+    cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
+    imovies_db.commit()
+
+    name = str(user_certificate.serial_number)+"_"+uid
+    user_certificate_pkcs12 = pkcs12.serialize_key_and_certificates(name.encode(),user_private_key, user_certificate, None, NoEncryption())
     
-    user_certificate_pkcs12 = pkcs12.serialize_key_and_certificates(user_private_key, user_certificate, None, NoEncryption)
-    
-    return jsonify({'pkcs12': b64.encode(user_certificate_pkcs12).decode()})
+    return jsonify({'pkcs12': b64.b64encode(user_certificate_pkcs12).decode()})
 
 
 def __get_new_certificate(uid, user_private_key):
@@ -249,7 +265,7 @@ def __get_new_certificate(uid, user_private_key):
     user_certificate_builder = x509.CertificateBuilder() \
         .subject_name(x509.Name([x509.NameAttribute(NameOID.USER_ID, uid)])) \
         .issuer_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'caserver.imovies')])) \
-        .serial_number(ca.serial) \
+        .serial_number(ca.serial+11) \
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())
