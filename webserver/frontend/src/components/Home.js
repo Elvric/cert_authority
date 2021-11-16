@@ -16,6 +16,9 @@ import ModalBody from "react-bootstrap/ModalBody";
 import ModalFooter from "react-bootstrap/ModalFooter";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+import { saveAs } from 'file-saver';
+const axios = require("axios").default;
+
 function EditModal(props) {
   const handleChange = (e) => {
     props.setField(e.target.value);
@@ -81,7 +84,6 @@ function EditModal(props) {
     </Modal>
   );
 }
-
 export default function Home() {
   const AuthContext = AuthConsumer();
   //states for the modal for editing
@@ -95,6 +97,22 @@ export default function Home() {
   const [field, setField] = useState("");
   const [show, setShow] = useState(false);
   const [type, setType] = useState("");
+
+  async function requestCertificate(e){
+    e.preventDefault();
+    try{
+      const res = await axios.get("/api/certificate");
+      if (res.status == 200){
+        let data = Buffer(res.data.pkcs12, 'base64');
+        saveAs(data, "cert.p12");
+        window.alert("You can download your certificate!");
+      }
+    }
+    catch(err){
+      window.alert("Error!")
+    }
+  }
+  
   return (
     <div className="HomePage">
       <Nav />
@@ -182,7 +200,7 @@ export default function Home() {
         </Row>
       </Container>
       <Container className="pt-1 pr-5 m-5 d-flex justify-content-end">
-        <Button variant="primary">Request New Certificate</Button>
+        <Button variant="primary" onClick={requestCertificate}>Request New Certificate</Button>
       </Container>
       <EditModal
         field={field}

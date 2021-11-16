@@ -32,7 +32,7 @@ function useAuth() {
       //   baseURL: "https://webserver.imovies/api/login",
       // });
       try {
-        const res = await axios.post("https://webserver.imovies/api/login", {
+        const res = await axios.post("/api/login", {
           uid,
           password,
         });

@@ -6,13 +6,23 @@ CREATE TABLE isadmin (
     ENGINE=MyISAM DEFAULT CHARSET=latin1;;
 
 CREATE TABLE certificates (
-    serial varchar(64),
+    serial int,
     uid varchar(64),
     pem_encoding varchar(2000) not null,
     revoked bool not null default 0,
     FOREIGN KEY (uid) REFERENCES users(uid)
     PRIMARY KEY (serial))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE intermediate_ca(
+    rid int,
+    serial int,
+    issued int,
+    revoked int,
+    PRIMARY KEY (rid))
+    ENGINE=MyISAM DEFAULT CHARSET=latin1;
+)
+
 --one duplicate added for testing
 create user certmanager@172.27.0.1 identified by 'SniaVj5YQnKSXXVu';
 grant insert on imovies.users to certmanager@172.27.0.1;
