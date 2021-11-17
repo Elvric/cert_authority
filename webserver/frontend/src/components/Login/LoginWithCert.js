@@ -36,7 +36,8 @@ export default function Login(props){
         reader.readAsArrayBuffer(cert);
         reader.onloadend = function (evt) {
             if (evt.target.readyState == FileReader.DONE) {
-                var arrayBuffer = evt.target.result, array = new Uint8Array(arrayBuffer);
+                var arrayBuffer = evt.target.result;
+                var array = new Uint8Array(arrayBuffer);
                 for (var i = 0; i < array.length; i++) {
                     fileByteArray.push(array[i]);
                 }
