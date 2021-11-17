@@ -2,6 +2,7 @@ import datetime
 from functools import wraps
 
 from cryptography import x509
+import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, pkcs12, NoEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -176,7 +177,8 @@ def verify_user_authentication_cert():
     certificate = None
     try:
         pvt_key, certificate, additional_certs = pkcs12.load_key_and_certificates(cert, b'')
-        
+        if certificate == None:
+            return make_response("Bad format for certificate", 500)
         #Some useful methods
         #print(certificate.serial_number) just because serial is a useful identifier
         #print(b64.b64encode(certificate.public_bytes(Encoding.PEM)).decode())
@@ -191,7 +193,7 @@ def verify_user_authentication_cert():
             certificate.signature_hash_algorithm,)
         
         #to do, check that the certificate is actually stored
-        query = "SELECT uid FROM imovies.certificates WHERE serial = %d AND pem_encoding = %s"
+        query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND pem_encoding = %s AND revoked = 0;"
         cursor.execute(query, (certificate.serial_number, pem_encoding))
         
         uid = cursor.fetchone()[0]
@@ -217,7 +219,7 @@ def verify_user_authentication_cert():
 @token_required
 def get_user_info(user):  # TODO: jwt type?
     if user == None:
-        make_response("How are you even here?", 500)
+        return make_response("How are you even here?", 500)
     else:
         print(user)
         return jsonify({"userID":user[0], "password":"****", "firstname":user[2], "lastname":user[1], "email":user[3]})
@@ -228,9 +230,9 @@ def get_user_info(user):  # TODO: jwt type?
 def modify_user_info(user):
     updated = request.get_json()
     if user == None:
-        make_response("How are you even here?", 500)
+        return make_response("How are you even here?", 500)
     if user[0] != updated["uid"]:
-        make_response("What the fuck!?", 500)
+        return make_response("What the fuck!?", 500)
     else:
         if updated["password"] != "****":
             query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s,pwd=%s WHERE uid=%s;"
@@ -287,6 +289,46 @@ def generate_certificate(user=None) -> Response:
     pkcs12_bytes = [x for x in bytearray(user_certificate_pkcs12)]
     return jsonify({'pkcs12': pkcs12_bytes})
 
+@app.route("/api/revoke", methods=['POST'])
+@token_required
+def revoke_cert(user):
+    if user == None:
+        return make_response("How are you even here?", 500)
+    else:
+        # load pkcs12 format
+        body = request.get_json()
+        cert = bytearray(body["cert"])
+        certificate = None
+        try:
+            pvt_key, certificate, additional_certs = pkcs12.load_key_and_certificates(cert, None)
+            if certificate == None:
+                return make_response("Bad Format for Cert", 500)
+            #Some useful methods
+            #print(certificate.serial_number) just because serial is a useful identifier
+            #print(b64.b64encode(certificate.public_bytes(Encoding.PEM)).decode())
+            pem_encoding = serialize_cert(certificate)
+            #print(deserialize_cert(data), "\n\n", certificate)
+            
+            INTM_PUB_KEY.verify(
+                certificate.signature,
+                certificate.tbs_certificate_bytes,
+                # Depends on the algorithm used to create the certificate
+                padding.PKCS1v15(),
+                certificate.signature_hash_algorithm,)
+            #to do, check that the certificate is actually stored
+            query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND pem_encoding = %s AND revoked = 0;"
+            cursor.execute(query, (certificate.serial_number, pem_encoding))
+            
+            uid = cursor.fetchone()
+            if uid == None:
+                return make_response("I don't recognize this certificate dude!", 500)
+            else:
+                query = "UPDATE imovies.certificates SET revoked = 1 WHERE serial = %s AND uid = %s AND pem_encoding = %s;"
+                cursor.execute(query, (certificate.serial_number, user[0], pem_encoding))
+                imovies_db.commit()
+                return make_response("Hasta la vista certificate!", 200)
+        except cryptography.exceptions.InvalidSignature:
+            return make_response("Invalid Certificate", 500)
 
 def get_new_certificate(uid, user_private_key):
     a_day = datetime.timedelta(1, 0, 0)
@@ -294,7 +336,7 @@ def get_new_certificate(uid, user_private_key):
     user_certificate_builder = x509.CertificateBuilder() \
         .subject_name(x509.Name([x509.NameAttribute(NameOID.USER_ID, uid)])) \
         .issuer_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'caserver.imovies')])) \
-        .serial_number(ca.serial+11) \
+        .serial_number(ca.serial) \
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())

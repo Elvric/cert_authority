@@ -67,14 +67,19 @@ function EditModal(props) {
         email,
         password,
       });
-      props.setUser({
-        UserId: uid,
-        Password: "****",
-        FirstName: firstName,
-        LastName: lastName,
-        Email: email,
-      });
-      window.alert("Changes applied!");
+      if (res.status == 200){
+        props.setUser({
+          UserId: uid,
+          Password: "****",
+          FirstName: firstName,
+          LastName: lastName,
+          Email: email,
+        });
+        window.alert("Changes applied!");
+      }
+      else{
+        window.alert("Error!");
+      }
     }
     catch(err){
       window.alert("Error sending data!");
@@ -125,24 +130,30 @@ function RevokeModal(props) {
     e.preventDefault();
     const dataArray = new FormData();
     dataArray.append("uploadFile", uploadFile);
-    let cert = uploadFile[0]; //file object
+    let uploaded = uploadFile[0]; //file object
     var reader = new FileReader();
-    var fileByteArray = [];
-    reader.readAsArrayBuffer(cert);
+    var cert = [];
+    reader.readAsArrayBuffer(uploaded);
     reader.onloadend = function (evt) {
         if (evt.target.readyState == FileReader.DONE) {
             var arrayBuffer = evt.target.result;
             var array = new Uint8Array(arrayBuffer);
             for (var i = 0; i < array.length; i++) {
-                fileByteArray.push(array[i]);
+                cert.push(array[i]);
             }
             try{
               const res = axios.post("/api/revoke", {
-                fileByteArray
+                cert
               });
+              if (res.status == 200){
+                window.alert("Revoked!");
+              }
+              else{
+                window.alert("Error!");
+              }
             }
             catch(err){
-              window.alert("Something went wrong revoking!");
+              window.alert("Something went wrong!");
             }
             finally{
               props.setShow(false);
@@ -154,12 +165,12 @@ function RevokeModal(props) {
     return (
     <Modal show={props.show} onHide={() => props.setShow(false)}>
       <ModalHeader closeButton>
-        <ModalTitle>Revoke Certificate</ModalTitle>
+        <ModalTitle>Revoke PKCS12 Certificate</ModalTitle>
       </ModalHeader>
       <ModalBody>         
         <Form onSubmit={handleRevoke}>
           <Form.Group controlId="formFile" className="mb-3">
-            <Form.Label>Upload your certificate here</Form.Label>
+            <Form.Label>Upload your PKCS12 certificate here</Form.Label>
             <Form.Control type="file" onChange={(e) => setUploadFile(e.target.files)}/>
           </Form.Group>
             <div className="RevokeButton">
