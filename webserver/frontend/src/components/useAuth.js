@@ -39,6 +39,7 @@ function useAuth() {
 
         if (res.status === 200) {
           const token = res.data.token;
+          console.log(token);
           axios.defaults.headers.common["x-access-tokens"] = token;
           window.localStorage.setItem("token", token);
         }
