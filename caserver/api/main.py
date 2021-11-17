@@ -232,9 +232,13 @@ def modify_user_info(user):
     if user[0] != updated["uid"]:
         make_response("What the fuck!?", 500)
     else:
-        query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s,pwd=%s WHERE uid=%s;"
-        hashed_checksum = hashlib.sha1(updated["password"].encode()).hexdigest()
-        cursor.execute(query, (updated["lastName"], updated["firstName"], updated["email"], hashed_checksum, updated["uid"]))
+        if updated["password"] != "****":
+            query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s,pwd=%s WHERE uid=%s;"
+            hashed_checksum = hashlib.sha1(updated["password"].encode()).hexdigest()
+            cursor.execute(query, (updated["lastName"], updated["firstName"], updated["email"], hashed_checksum, updated["uid"]))
+        else:
+            query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s WHERE uid=%s;"
+            cursor.execute(query, (updated["lastName"], updated["firstName"], updated["email"], updated["uid"]))
         imovies_db.commit()
         return make_response("Updated!",200)
 

@@ -59,6 +59,7 @@ function EditModal(props) {
     });
     */
     try{
+      //remember that the password should be ignored if **** 
       const res = await axios.post("/api/modify",{
         uid,
         lastName,
@@ -72,10 +73,11 @@ function EditModal(props) {
         FirstName: firstName,
         LastName: lastName,
         Email: email,
-      })
+      });
+      window.alert("Changes applied!");
     }
     catch(err){
-      window.alert("Error sending data!")
+      window.alert("Error sending data!");
     }
     finally{
       props.setShow(false);
