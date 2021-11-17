@@ -328,9 +328,26 @@ def revoke_cert(user):
                 query = "UPDATE imovies.certificates SET revoked = 1 WHERE serial = %s AND uid = %s AND pem_encoding = %s;"
                 cursor.execute(query, (certificate.serial_number, user[0], pem_encoding))
                 imovies_db.commit()
+                ca.revoked += 1
+                query = "UPDATE imovies.intermediate_ca SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
+                cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
+                imovies_db.commit()
                 return make_response("Hasta la vista certificate!", 200)
         except cryptography.exceptions.InvalidSignature:
             return make_response("Invalid Certificate", 500)
+
+@app.route("/api/admin", methods=["GET"])
+@token_required
+def get_ca_status(user):
+    if user == None:
+        return make_response("WTF?", 500)
+    query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
+    cursor.execute(query, (user[0],))
+    isadmin = cursor.fetchone()[0]
+    if not not isadmin:
+        return make_response("Not an admin!", 403)
+    else:
+        return jsonify({"serial":ca.serial, "issued":ca.issued, "revoked":ca.revoked})
 
 def get_new_certificate(uid, user_private_key):
     a_day = datetime.timedelta(1, 0, 0)

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import AuthConsumer from "./useAuth";
 import React, { useState, useEffect } from "react";
+import { Navigate, Route } from "react-router-dom";
 //BootStrap react imports
 import Container from "react-bootstrap/Container";
 import Form from "react-bootstrap/Form";
@@ -19,9 +20,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { saveAs } from 'file-saver';
 import { Buffer } from "buffer";
 const axios = require("axios").default;
-const forge = require("node-forge");
-forge.options.usePureJavascript = true;
-const asn1 = forge.asn1;
 
 function EditModal(props) {
   const handleChange = (e) => {
@@ -184,6 +182,7 @@ function RevokeModal(props) {
 
 export default function Home() {
   const AuthContext = AuthConsumer();
+  const isadmin = AuthContext.isAdmin;
   //states for the modal for editing
   const [user, setUser] = useState({
     UserId: "",
@@ -196,6 +195,7 @@ export default function Home() {
   const [show, setShow] = useState(false);
   const [type, setType] = useState("");
   const [showRevoke, setShowRevoke] = useState(false);
+  const navigate = useNavigate();
 
   async function requestCertificate(e){
     e.preventDefault();
@@ -301,14 +301,19 @@ export default function Home() {
           </Col>
         </Row>
       </Container>
-      
-      <Container className="pt-1 pr-5 m-5 d-flex justify-content-end">
-        <Button variant="primary" onClick={requestCertificate}>Request New Certificate</Button>
-      </Container>
-      <Container className="pt-1 pr-5 m-5 d-flex justify-content-end">
-        <Button variant="danger" onClick={() => setShowRevoke(true)}>Revoke Certificate</Button>
-      </Container>
-      
+      <Row>
+        <Col className="pt-1 pr-5 m-5 d-flex justify-content-end">
+          <Container className="pt-1 pr-5 m-5 d-flex justify-content-center">
+            <Button variant="primary" onClick={requestCertificate}>Request New Certificate</Button>
+          </Container>
+          <Container className="pt-1 pr-5 m-5 d-flex justify-content-center">
+            <Button variant="danger" onClick={() => setShowRevoke(true)}>Revoke Certificate</Button>
+          </Container>
+          <Container className="pt-1 pr-5 m-5 d-flex justify-content-center" style={{visibility:isadmin?'visible':'hidden'}}>
+            <Button variant="warning" disabled={!isadmin} onClick={() => navigate("/admin")}>Admin Panel</Button> 
+          </Container>
+        </Col>
+      </Row>
       <EditModal
         field={field}
         setField={setField}

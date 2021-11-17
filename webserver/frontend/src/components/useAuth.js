@@ -4,6 +4,15 @@ const axios = require("axios").default;
 const https = require("https");
 
 const authContext = React.createContext();
+const parseJwt = (token) => {
+  try {
+    let jwt = Buffer.from(token.split('.')[1], 'base64').toString();
+    console.log(jwt)
+    return JSON.parse(jwt);
+  } catch (e) {
+    return null;
+  }
+};
 
 function useAuth() {
   /*
@@ -13,14 +22,16 @@ function useAuth() {
   const [state, setState] = React.useState({
     authed: false,
     isLoading: true,
+    isAdmin:false,
   });
 
   return {
     state,
     setToken: (token) => {
       if (token !== null) {
-        console.log("Setting state", token);
-        setState({ authed: true, isLoading: false });
+        const decoded = parseJwt(token);
+        console.log(decoded["admin"]);
+        setState({ authed: true, isLoading: false, isAdmin: decoded["admin"]});
         axios.defaults.headers.common["x-access-tokens"] = token;
       }
     },
@@ -36,18 +47,17 @@ function useAuth() {
           uid,
           password,
         });
-
         if (res.status === 200) {
           const token = res.data.token;
-          console.log(token);
+          const decoded = parseJwt(token);
+          const isadmin = decoded["admin"]
           axios.defaults.headers.common["x-access-tokens"] = token;
           window.localStorage.setItem("token", token);
-        }
-
-        return new Promise((res) => {
-          setState({ authed: true, isLoading: false });
-          res();
+          return new Promise((res) => {
+            setState({ authed: true, isLoading: false, isAdmin: (isadmin === 1) });
+            res();
         });
+      }
       } catch (err) {
         window.alert("Invalid credentials");
         setState((s) => ({ ...s, isLoading: false }));
@@ -69,22 +79,24 @@ function useAuth() {
 
         if (res.status === 200) {
           const token = res.data.token;
+          const decoded = parseJwt(token);
+          const isadmin = decoded["admin"];
           axios.defaults.headers.common["x-access-tokens"] = token;
           window.localStorage.setItem("token", token);
-        }
-
-        return new Promise((res) => {
-          setState({ authed: true, isLoading: false });
-          res();
+          return new Promise((res) => {
+            setState({ authed: true, isLoading: false, isAdmin: (isadmin === 1) });
+            res();
         });
+      }
       } catch (err) {
         window.alert("Invalid credentials");
         setState((s) => ({ ...s, isLoading: false }));
       }
     },
     logout: () => {
+      localStorage.removeItem("token");
       return new Promise((res) => {
-        setState((s) => ({ authed: false, isLoading: false }));
+        setState((s) => ({ authed: false, isLoading: false, isAdmin: false }));
         res();
       });
     },
