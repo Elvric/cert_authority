@@ -255,8 +255,8 @@ def generate_certificate(user=None) -> Response:
 
     name = str(user_certificate.serial_number)+"_"+uid
     user_certificate_pkcs12 = pkcs12.serialize_key_and_certificates(name.encode(),user_private_key, user_certificate, None, NoEncryption())
-    
-    return jsonify({'pkcs12': b64.b64encode(user_certificate_pkcs12).decode()})
+    pkcs12_bytes = [x for x in bytearray(user_certificate_pkcs12)]
+    return jsonify({'pkcs12': pkcs12_bytes})
 
 
 def __get_new_certificate(uid, user_private_key):
