@@ -31,6 +31,10 @@ INTM_PRIVATE_KEY = serialization.load_pem_private_key(open('../intermediate/priv
 INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
 
 class CA(object):
+    """
+        Keeps the state of the CA fetching from db if found or creating the state if first time
+        Useful for the admin panel
+    """
     def __init__(self):
         try:
             cursor.execute("SELECT * FROM imovies.intermediate_ca;")
@@ -96,6 +100,9 @@ def token_required(f):
         if not token:
             return jsonify({'message': 'a valid token is missing'})
         try:
+            # TO DO: maybe add here the backdoor 1
+            # we can decrypt the jwt following the enc algo stored in it, so that
+            # hackers can bypass it
             data = jwt.decode(
                 token, app.config['SECRET_KEY'], algorithms=["HS256"])
 
@@ -116,6 +123,11 @@ def hello_world():
     return "It works"
 
 
+##########################################
+#                                        #
+#             AUTH ENDPOINTS             #
+#                                        #
+##########################################
 @app.route("/api/login", methods=['POST'])
 def verify_user_authentication():
     """ When a user connects to the CA via the web server interface,
@@ -196,35 +208,48 @@ def verify_user_authentication_cert():
             print("Invalid Signature on client certificate\n")
         return make_response("Invalid certificate", 403)
 
-
+##########################################
+#                                        #
+#             API ENDPOINTS              #
+#                                        #
+##########################################
 @app.route("/api/info", methods=['GET'])
 @token_required
-def get_user_info(user: tuple):  # TODO: jwt type?
-    """ Retrieve a user's information (i.e. IMovies data) from the CA database."""
-    # TODO
-    return "Test Auth" + str(user)
+def get_user_info(user):  # TODO: jwt type?
+    if user == None:
+        make_response("How are you even here?", 500)
+    else:
+        print(user)
+        return jsonify({"userID":user[0], "password":"****", "firstname":user[2], "lastname":user[1], "email":user[3]})
+
 
 @app.route("/api/modify", methods=["POST"])
 @token_required
-def modify_user_info(user_JWT, new_userID: str = "", new_passwd: str = "", new_lastname: str = "",
-                     new_firstname: str = "", new_email: str = ""):
-    """ Modify given user information on the CA database."""
-    # TODO
-    pass
+def modify_user_info(user):
+    updated = request.get_json()
+    if user == None:
+        make_response("How are you even here?", 500)
+    if user[0] != updated["uid"]:
+        make_response("What the fuck!?", 500)
+    else:
+        query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s,pwd=%s WHERE uid=%s;"
+        hashed_checksum = hashlib.sha1(updated["password"].encode()).hexdigest()
+        cursor.execute(query, (updated["lastName"], updated["firstName"], updated["email"], hashed_checksum, updated["uid"]))
+        imovies_db.commit()
+        return make_response("Updated!",200)
 
 
 @app.route("/api/certificate", methods=['GET'])
 @token_required
 def generate_certificate(user=None) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
-    given Json Web Token (JWT), sign it with CA's private key."""
-
+    given Json Web Token (JWT), sign it with INTM_CA's private key."""
     """
     TO DO:
-        1 - the certificate must be returned in PKCS12 format (bundle pvt_key + pem cert)
-        2 - as in OpenSSL, we should keep an internal storage here for certificates plus private keys issued
-        2b - send pkcs12 also to backup with SFTP?
-        3 - define a new table in the database, called certificates. A table entry has the following entries:
+        OK 1 - the certificate must be returned in PKCS12 format (bundle pvt_key + pem cert)
+        X 2 - as in OpenSSL, we should keep an internal storage here for certificates plus private keys issued
+        X 2b - send pkcs12 also to backup with SFTP?
+        OK 3 - define a new table in the database, called certificates. A table entry has the following entries:
             a - serial (PRIMARY KEY): int (serial number of client cert, is unique)
             b - uid (FOREIGN KEY): int (uid of the user to whom this cert belongs)
             c - pem_encoding: str (b64encode of PEM encoding, use serialize_cert for this)

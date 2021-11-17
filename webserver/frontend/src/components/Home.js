@@ -49,6 +49,7 @@ function EditModal(props) {
     if (props.type === "Email") {
       email = props.field;
     }
+    /*
     props.setUser({
       UserId: uid,
       Password: "****",
@@ -56,7 +57,29 @@ function EditModal(props) {
       LastName: lastName,
       Email: email,
     });
-    props.setShow(false);
+    */
+    try{
+      const res = await axios.post("/api/modify",{
+        uid,
+        lastName,
+        firstName,
+        email,
+        password,
+      });
+      props.setUser({
+        UserId: uid,
+        Password: "****",
+        FirstName: firstName,
+        LastName: lastName,
+        Email: email,
+      })
+    }
+    catch(err){
+      window.alert("Error sending data!")
+    }
+    finally{
+      props.setShow(false);
+    }
   };
   return (
     <Modal show={props.show} onHide={() => props.setShow(false)}>
@@ -92,11 +115,11 @@ export default function Home() {
   const AuthContext = AuthConsumer();
   //states for the modal for editing
   const [user, setUser] = useState({
-    UserId: "uid",
-    Password: "****",
-    FirstName: "Ciro",
-    LastName: "Immobile",
-    Email: "ciro.immobile@lazio.it",
+    UserId: "",
+    Password: "",
+    FirstName: "",
+    LastName: "",
+    Email: "",
   });
   const [field, setField] = useState("");
   const [show, setShow] = useState(false);
@@ -116,6 +139,18 @@ export default function Home() {
       window.alert("Error!")
     }
   }
+  //fetch user data before rendering
+  useEffect( async function () {
+    try{
+      const res = await axios.get("/api/info");
+      if (res.status == 200){
+        setUser({UserId: res.data.userID, Password: res.data.password, FirstName: res.data.firstname, LastName: res.data.lastname, Email: res.data.email});
+      }
+    }
+    catch(err){
+      window.alert("Error retrieving data!");
+    }
+  }, []);
   
   return (
     <div className="HomePage">
@@ -125,16 +160,7 @@ export default function Home() {
           <Col>User ID: </Col>
           <Col>{user.UserId}</Col>
           <Col>
-            <Button
-              variant="success"
-              onClick={() => {
-                setField(user.UserId);
-                setShow(true);
-                setType("User ID");
-              }}
-            >
-              Edit
-            </Button>
+            {/*just a placeholder*/}
           </Col>
         </Row>
         <Row className="pt-1">
