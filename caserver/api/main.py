@@ -265,7 +265,7 @@ def generate_certificate(user=None) -> Response:
 
     # source: https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
     user_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    user_certificate = __get_new_certificate(uid, user_private_key)
+    user_certificate = get_new_certificate(uid, user_private_key)
 
     #user_private_key_str = user_private_key.private_bytes(encoding=Encoding.PEM, format=PrivateFormat.PKCS8,encryption_algorithm=serialization.NoEncryption()).decode()
     #user_certificate_str = user_certificate.public_bytes(Encoding.PEM).decode()
@@ -288,7 +288,7 @@ def generate_certificate(user=None) -> Response:
     return jsonify({'pkcs12': pkcs12_bytes})
 
 
-def __get_new_certificate(uid, user_private_key):
+def get_new_certificate(uid, user_private_key):
     a_day = datetime.timedelta(1, 0, 0)
     certificate_validity_duration = 365  # in number of days
     user_certificate_builder = x509.CertificateBuilder() \

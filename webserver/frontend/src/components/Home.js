@@ -113,6 +113,66 @@ function EditModal(props) {
     </Modal>
   );
 }
+
+function RevokeModal(props) {
+  const [uploadFile, setUploadFile] = useState(null);
+  
+  function validateForm() {
+    return (uploadFile !== null);
+  }
+  
+  const handleRevoke = async function (e) {
+    e.preventDefault();
+    const dataArray = new FormData();
+    dataArray.append("uploadFile", uploadFile);
+    let cert = uploadFile[0]; //file object
+    var reader = new FileReader();
+    var fileByteArray = [];
+    reader.readAsArrayBuffer(cert);
+    reader.onloadend = function (evt) {
+        if (evt.target.readyState == FileReader.DONE) {
+            var arrayBuffer = evt.target.result;
+            var array = new Uint8Array(arrayBuffer);
+            for (var i = 0; i < array.length; i++) {
+                fileByteArray.push(array[i]);
+            }
+            try{
+              const res = axios.post("/api/revoke", {
+                fileByteArray
+              });
+            }
+            catch(err){
+              window.alert("Something went wrong revoking!");
+            }
+            finally{
+              props.setShow(false);
+            }
+          };
+        }
+    };
+  
+    return (
+    <Modal show={props.show} onHide={() => props.setShow(false)}>
+      <ModalHeader closeButton>
+        <ModalTitle>Revoke Certificate</ModalTitle>
+      </ModalHeader>
+      <ModalBody>         
+        <Form onSubmit={handleRevoke}>
+          <Form.Group controlId="formFile" className="mb-3">
+            <Form.Label>Upload your certificate here</Form.Label>
+            <Form.Control type="file" onChange={(e) => setUploadFile(e.target.files)}/>
+          </Form.Group>
+            <div className="RevokeButton">
+              <Button block variant="danger" size ="lg" type="submit" disabled={!validateForm()}>
+                Revoke
+              </Button>
+            </div>
+          </Form>
+      </ModalBody>
+    </Modal>
+  );
+}
+
 export default function Home() {
   const AuthContext = AuthConsumer();
   //states for the modal for editing
@@ -126,6 +186,7 @@ export default function Home() {
   const [field, setField] = useState("");
   const [show, setShow] = useState(false);
   const [type, setType] = useState("");
+  const [showRevoke, setShowRevoke] = useState(false);
 
   async function requestCertificate(e){
     e.preventDefault();
@@ -231,9 +292,14 @@ export default function Home() {
           </Col>
         </Row>
       </Container>
+      
       <Container className="pt-1 pr-5 m-5 d-flex justify-content-end">
         <Button variant="primary" onClick={requestCertificate}>Request New Certificate</Button>
       </Container>
+      <Container className="pt-1 pr-5 m-5 d-flex justify-content-end">
+        <Button variant="danger" onClick={() => setShowRevoke(true)}>Revoke Certificate</Button>
+      </Container>
+      
       <EditModal
         field={field}
         setField={setField}
@@ -242,6 +308,10 @@ export default function Home() {
         show={show}
         setShow={setShow}
         type={type}
+      />
+      <RevokeModal
+        show={showRevoke}
+        setShow={setShowRevoke}
       />
     </div>
   );
