@@ -148,13 +148,15 @@ def verify_user_authentication():
     # TO DO: better if we send hash directly
     hashed_checksum = hashlib.sha1(pwd.encode()).hexdigest()
 
-    query = "SELECT * FROM imovies.users WHERE uid = %s AND pwd = %s"
+    query = "SELECT * FROM imovies.users WHERE uid = %s AND pwd = %s;"
     cursor.execute(query, (uid, hashed_checksum))
 
     if cursor.fetchone() != None:  # checks if the user is in the database, if yes generate jwt
+        query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
+        cursor.execute(query, (uid,))
+        isadmin = cursor.fetchone()[0]
         token = jwt.encode(
-            {'uid': uid, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
-
+            {'uid': uid, 'admin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
         return jsonify({'token': token})
     else:
         return make_response("Wrong credentials", 403)
