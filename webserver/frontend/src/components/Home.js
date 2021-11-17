@@ -134,7 +134,7 @@ function RevokeModal(props) {
     var reader = new FileReader();
     var cert = [];
     reader.readAsArrayBuffer(uploaded);
-    reader.onloadend = function (evt) {
+    reader.onloadend = async function (evt) {
         if (evt.target.readyState == FileReader.DONE) {
             var arrayBuffer = evt.target.result;
             var array = new Uint8Array(arrayBuffer);
@@ -142,24 +142,22 @@ function RevokeModal(props) {
                 cert.push(array[i]);
             }
             try{
-              const res = axios.post("/api/revoke", {
+              const res = await axios.post("/api/revoke", {
                 cert
               });
               if (res.status == 200){
                 window.alert("Revoked!");
               }
-              else{
-                window.alert("Error!");
-              }
             }
             catch(err){
+              console.log(err);
               window.alert("Something went wrong!");
             }
             finally{
               props.setShow(false);
             }
           };
-        }
+        };
     };
   
     return (
