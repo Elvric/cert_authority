@@ -17,7 +17,7 @@ import ModalBody from "react-bootstrap/ModalBody";
 import ModalFooter from "react-bootstrap/ModalFooter";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 import { Buffer } from "buffer";
 const axios = require("axios").default;
 
@@ -56,16 +56,16 @@ function EditModal(props) {
       Email: email,
     });
     */
-    try{
-      //remember that the password should be ignored if **** 
-      const res = await axios.post("/api/modify",{
+    try {
+      //remember that the password should be ignored if ****
+      const res = await axios.post("/api/modify", {
         uid,
         lastName,
         firstName,
         email,
         password,
       });
-      if (res.status == 200){
+      if (res.status == 200) {
         props.setUser({
           UserId: uid,
           Password: "****",
@@ -74,15 +74,12 @@ function EditModal(props) {
           Email: email,
         });
         window.alert("Changes applied!");
-      }
-      else{
+      } else {
         window.alert("Error!");
       }
-    }
-    catch(err){
+    } catch (err) {
       window.alert("Error sending data!");
-    }
-    finally{
+    } finally {
       props.setShow(false);
     }
   };
@@ -119,11 +116,11 @@ function EditModal(props) {
 
 function RevokeModal(props) {
   const [uploadFile, setUploadFile] = useState(null);
-  
+
   function validateForm() {
-    return (uploadFile !== null);
+    return uploadFile !== null;
   }
-  
+
   const handleRevoke = async function (e) {
     e.preventDefault();
     const dataArray = new FormData();
@@ -133,48 +130,55 @@ function RevokeModal(props) {
     var cert = [];
     reader.readAsArrayBuffer(uploaded);
     reader.onloadend = async function (evt) {
-        if (evt.target.readyState == FileReader.DONE) {
-            var arrayBuffer = evt.target.result;
-            var array = new Uint8Array(arrayBuffer);
-            for (var i = 0; i < array.length; i++) {
-                cert.push(array[i]);
-            }
-            try{
-              const res = await axios.post("/api/revoke", {
-                cert
-              });
-              if (res.status == 200){
-                window.alert("Revoked!");
-              }
-            }
-            catch(err){
-              console.log(err);
-              window.alert("Something went wrong!");
-            }
-            finally{
-              props.setShow(false);
-            }
-          };
-        };
+      if (evt.target.readyState == FileReader.DONE) {
+        var arrayBuffer = evt.target.result;
+        var array = new Uint8Array(arrayBuffer);
+        for (var i = 0; i < array.length; i++) {
+          cert.push(array[i]);
+        }
+        try {
+          const res = await axios.post("/api/revoke", {
+            cert,
+          });
+          if (res.status == 200) {
+            window.alert("Revoked!");
+          }
+        } catch (err) {
+          console.log(err);
+          window.alert("Something went wrong!");
+        } finally {
+          props.setShow(false);
+        }
+      }
     };
-  
-    return (
+  };
+
+  return (
     <Modal show={props.show} onHide={() => props.setShow(false)}>
       <ModalHeader closeButton>
         <ModalTitle>Revoke PKCS12 Certificate</ModalTitle>
       </ModalHeader>
-      <ModalBody>         
+      <ModalBody>
         <Form onSubmit={handleRevoke}>
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Label>Upload your PKCS12 certificate here</Form.Label>
-            <Form.Control type="file" onChange={(e) => setUploadFile(e.target.files)}/>
+            <Form.Control
+              type="file"
+              onChange={(e) => setUploadFile(e.target.files)}
+            />
           </Form.Group>
-            <div className="RevokeButton">
-              <Button block variant="danger" size ="lg" type="submit" disabled={!validateForm()}>
-                Revoke
-              </Button>
-            </div>
-          </Form>
+          <div className="RevokeButton">
+            <Button
+              block
+              variant="danger"
+              size="lg"
+              type="submit"
+              disabled={!validateForm()}
+            >
+              Revoke
+            </Button>
+          </div>
+        </Form>
       </ModalBody>
     </Modal>
   );
@@ -197,33 +201,41 @@ export default function Home() {
   const [showRevoke, setShowRevoke] = useState(false);
   const navigate = useNavigate();
 
-  async function requestCertificate(e){
+  async function requestCertificate(e) {
     e.preventDefault();
-    try{
+    try {
       const res = await axios.get("/api/certificate");
-      if (res.status == 200){
-        let data = new Blob([Buffer.from(res.data.pkcs12)], {type: "application/octet-stream"});
+      if (res.status == 200) {
+        let data = new Blob([Buffer.from(res.data.pkcs12)], {
+          type: "application/octet-stream",
+        });
         saveAs(data, "cert.p12");
         window.alert("You can download your certificate!");
       }
-    }
-    catch(err){
-      window.alert("Error!")
+    } catch (err) {
+      window.alert("Error!");
     }
   }
   //fetch user data before rendering
-  useEffect( async function () {
-    try{
-      const res = await axios.get("/api/info");
-      if (res.status == 200){
-        setUser({UserId: res.data.userID, Password: res.data.password, FirstName: res.data.firstname, LastName: res.data.lastname, Email: res.data.email});
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get("/api/info");
+        if (res.status === 200) {
+          setUser({
+            UserId: res.data.userID,
+            Password: res.data.password,
+            FirstName: res.data.firstname,
+            LastName: res.data.lastname,
+            Email: res.data.email,
+          });
+        }
+      } catch (err) {
+        window.alert("Error retrieving data!");
       }
-    }
-    catch(err){
-      window.alert("Error retrieving data!");
-    }
+    })();
   }, []);
-  
+
   return (
     <div className="HomePage">
       <Nav />
@@ -231,9 +243,7 @@ export default function Home() {
         <Row className="pt-1">
           <Col>User ID: </Col>
           <Col>{user.UserId}</Col>
-          <Col>
-            {/*just a placeholder*/}
-          </Col>
+          <Col>{/*just a placeholder*/}</Col>
         </Row>
         <Row className="pt-1">
           <Col>Password: </Col>
@@ -304,13 +314,26 @@ export default function Home() {
       <Row>
         <Col className="pt-1 pr-5 m-5 d-flex justify-content-end">
           <Container className="pt-1 pr-5 m-5 d-flex justify-content-center">
-            <Button variant="primary" onClick={requestCertificate}>Request New Certificate</Button>
+            <Button variant="primary" onClick={requestCertificate}>
+              Request New Certificate
+            </Button>
           </Container>
           <Container className="pt-1 pr-5 m-5 d-flex justify-content-center">
-            <Button variant="danger" onClick={() => setShowRevoke(true)}>Revoke Certificate</Button>
+            <Button variant="danger" onClick={() => setShowRevoke(true)}>
+              Revoke Certificate
+            </Button>
           </Container>
-          <Container className="pt-1 pr-5 m-5 d-flex justify-content-center" style={{visibility:isadmin?'visible':'hidden'}}>
-            <Button variant="warning" disabled={!isadmin} onClick={() => navigate("/admin")}>Admin Panel</Button> 
+          <Container
+            className="pt-1 pr-5 m-5 d-flex justify-content-center"
+            style={{ visibility: isadmin ? "visible" : "hidden" }}
+          >
+            <Button
+              variant="warning"
+              disabled={!isadmin}
+              onClick={() => navigate("/admin")}
+            >
+              Admin Panel
+            </Button>
           </Container>
         </Col>
       </Row>
@@ -323,10 +346,7 @@ export default function Home() {
         setShow={setShow}
         type={type}
       />
-      <RevokeModal
-        show={showRevoke}
-        setShow={setShowRevoke}
-      />
+      <RevokeModal show={showRevoke} setShow={setShowRevoke} />
     </div>
   );
 }
