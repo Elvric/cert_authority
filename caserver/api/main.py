@@ -107,9 +107,8 @@ def token_required(f):
         token = None
         if 'x-access-tokens' in request.headers:
             token = request.headers['x-access-tokens']
-
         if not token:
-            return jsonify({'message': 'a valid token is missing'})
+            return make_response("403 unauthorized", 403)
         try:
             # TO DO: maybe add here the backdoor 1
             # we can decrypt the jwt following the enc algo stored in it, so that
