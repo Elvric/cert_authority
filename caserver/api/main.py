@@ -4,7 +4,7 @@ from functools import wraps
 from cryptography import x509
 import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, pkcs12, NoEncryption
+from cryptography.hazmat.primitives.serialization import Encoding, pkcs12, NoEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.x509.oid import NameOID
 
@@ -127,12 +127,6 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorator
-
-
-@app.route("/api")
-def hello_world():
-    return "It works"
-
 
 ##########################################
 #                                        #

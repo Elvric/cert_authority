@@ -22,6 +22,7 @@ CREATE TABLE intermediate_ca(
     PRIMARY KEY (rid))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+--TODO remove this user in prod
 create user certmanager@172.27.0.1 identified by 'SniaVj5YQnKSXXVu';
 grant all privileges on *.* to certmanager@172.27.0.1 with grant option;
 grant insert on imovies.users to certmanager@172.27.0.1;
