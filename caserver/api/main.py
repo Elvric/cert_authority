@@ -65,6 +65,9 @@ app = Flask(__name__)
 app.debug = True
 # used to sign jwt
 app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
+# creds for sftp
+app.config["SFTP_USER"] = 'sftp_manager'
+app.config["SFTP_PWD"] = 'sup3r_s3cr3t_sftp'
 
 #################################################
 #                                               #
