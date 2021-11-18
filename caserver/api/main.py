@@ -194,8 +194,11 @@ def verify_user_authentication_cert():
         
         uid = cursor.fetchone()[0]
         if uid != None:  # checks if the user is in the database, if yes generate jwt
+            query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
+            cursor.execute(query, (uid,))
+            isadmin = cursor.fetchone()[0]
             token = jwt.encode(
-                {'uid': uid, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
+                {'uid': uid, 'admin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
             return jsonify({'token': token})
         else:
             return make_response("Wrong credentials", 403)
