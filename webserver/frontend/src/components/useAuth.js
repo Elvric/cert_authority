@@ -6,8 +6,8 @@ const https = require("https");
 const authContext = React.createContext();
 const parseJwt = (token) => {
   try {
-    let jwt = Buffer.from(token.split('.')[1], 'base64').toString();
-    console.log(jwt)
+    let jwt = Buffer.from(token.split(".")[1], "base64").toString();
+    console.log(jwt);
     return JSON.parse(jwt);
   } catch (e) {
     return null;
@@ -22,7 +22,7 @@ function useAuth() {
   const [state, setState] = React.useState({
     authed: false,
     isLoading: true,
-    isAdmin:false,
+    isAdmin: false,
   });
 
   return {
@@ -30,9 +30,8 @@ function useAuth() {
     setToken: (token) => {
       if (token !== null) {
         const decoded = parseJwt(token);
-        console.log(decoded["admin"]);
-        setState({ authed: true, isLoading: false, isAdmin: decoded["admin"]});
         axios.defaults.headers.common["x-access-tokens"] = token;
+        setState({ authed: true, isLoading: false, isAdmin: decoded["admin"] });
       }
     },
     login: async (uid, password) => {
@@ -50,14 +49,18 @@ function useAuth() {
         if (res.status === 200) {
           const token = res.data.token;
           const decoded = parseJwt(token);
-          const isadmin = decoded["admin"]
+          const isadmin = decoded["admin"];
           axios.defaults.headers.common["x-access-tokens"] = token;
           window.localStorage.setItem("token", token);
           return new Promise((res) => {
-            setState({ authed: true, isLoading: false, isAdmin: (isadmin === 1) });
+            setState({
+              authed: true,
+              isLoading: false,
+              isAdmin: isadmin === 1,
+            });
             res();
-        });
-      }
+          });
+        }
       } catch (err) {
         window.alert("Invalid credentials");
         setState((s) => ({ ...s, isLoading: false }));
@@ -73,8 +76,8 @@ function useAuth() {
       //   baseURL : 'https://webserver.imovies/api/login_with_cert'
       // });
       try {
-          const res = await axios.post("/api/login_with_cert", {
-            cert
+        const res = await axios.post("/api/login_with_cert", {
+          cert,
         });
 
         if (res.status === 200) {
@@ -84,10 +87,14 @@ function useAuth() {
           axios.defaults.headers.common["x-access-tokens"] = token;
           window.localStorage.setItem("token", token);
           return new Promise((res) => {
-            setState({ authed: true, isLoading: false, isAdmin: (isadmin === 1) });
+            setState({
+              authed: true,
+              isLoading: false,
+              isAdmin: isadmin === 1,
+            });
             res();
-        });
-      }
+          });
+        }
       } catch (err) {
         window.alert("Invalid credentials");
         setState((s) => ({ ...s, isLoading: false }));
