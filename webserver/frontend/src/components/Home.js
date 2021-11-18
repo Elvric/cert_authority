@@ -212,7 +212,8 @@ export default function Home() {
     }
   }
   //fetch user data before rendering
-  useEffect( async function () {
+  useEffect(function () {
+    console.log("trigger");
     try{
       const res = await axios.get("/api/info");
       if (res.status == 200){
