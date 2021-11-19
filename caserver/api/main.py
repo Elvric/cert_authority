@@ -47,7 +47,7 @@ class CA(object):
 
     def __init__(self):
         try:
-            cursor.execute("SELECT * FROM imovies.intermediate_ca;")
+            cursor.execute("SELECT * FROM imovies.certificate_issuing_status;")
             data = cursor.fetchone()[1:]
             self.serial = data[0]
             self.issued = data[1]
@@ -58,7 +58,7 @@ class CA(object):
             self.issued = 0
             self.revoked = 0
             cursor.execute(
-                "INSERT INTO imovies.intermediate_ca (rid, serial, issued, revoked) VALUES (1,1,0,0);")
+                "INSERT INTO imovies.certificate_issuing_status (rid, serial, issued, revoked) VALUES (1,1,0,0);")
             imovies_db.commit()
 
 
@@ -302,7 +302,7 @@ def generate_certificate(user=None) -> Response:
     imovies_db.commit()
 
     # update ca in db
-    query = "UPDATE imovies.intermediate_ca SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
+    query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
     cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
     imovies_db.commit()
 
@@ -360,7 +360,7 @@ def revoke_cert(user):
                     query, (certificate.serial_number, user[0], pem_encoding))
                 imovies_db.commit()
                 ca.revoked += 1
-                query = "UPDATE imovies.intermediate_ca SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
+                query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
                 cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
                 imovies_db.commit()
                 return make_response("Hasta la vista certificate!", 200)
