@@ -3,3 +3,4 @@ pyjwt
 uwsgi
 mysql-connector-python
 cryptography
+pysftp

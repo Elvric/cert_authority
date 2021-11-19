@@ -45,16 +45,16 @@ services:
     ports:
       - "3306:3306"
 
-#  backupserver:
-#    build:
-#      context: backupserver
-#      dockerfile: BackupServer.dockerfile
-#    tty: true
-#    networks:
-#      internal_net:
-#        ipv4_address: 172.27.0.4
-#    ports:
-#      - "22:22"
+ # backupserver:
+ #   build:
+ #     context: backupserver
+ #     dockerfile: BackupServer.dockerfile
+ #   tty: true
+ #   networks:
+ #     internal_net:
+ #       ipv4_address: 172.27.0.4
+ #   ports:
+ #     - "2222:22"
   backupserver:
     image: atmoz/sftp
     ports:
