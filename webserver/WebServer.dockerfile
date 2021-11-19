@@ -7,5 +7,5 @@ COPY nginx /tmp/setup/nginx
 COPY cert /tmp/setup/cert
 RUN chmod u+x /tmp/setup/setup.sh
 RUN ./tmp/setup/setup.sh
-RUN apt-get install npm -y
+RUN apt install npm -y
 CMD service nginx restart && npm start --prefix /webserver/frontend
