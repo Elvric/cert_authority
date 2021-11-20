@@ -1,3 +1,7 @@
+# MOVE YOUR VENV from caserver/api to caserver 
+otherwise vagrant will try to copy it to the CA VM (taking too much time)
+
+
 # Virtual Machines and Vagrant
 When running vagrant ensure that you are in the root directory of this project.
 All the setup is in the `Vagrantfile`
