@@ -19,13 +19,18 @@ All the setup is in the `Vagrantfile`
 **You can also see the VMs by opening virtual box**
 
 ## TODOS
-Note that currently the services do not work
 
 ### Database
 Seem to work fine, no problem there
 
 ### CaServer
-Ran into some issues with Json tokens not sure why to be reviewed
+Seem to work fine, no problem there
 
 ### Webserver
 Ran into some issues when building the project
+
+## Things that need to be done before submitting the project
+- Check all the TODOs in the project
+- Change the vagrant user to admin user with a hard password
+- Disable ssh vagrant
+- Disable the no password sudo property of the vagrant user
