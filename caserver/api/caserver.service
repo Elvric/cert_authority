@@ -6,9 +6,8 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/caserver/api
-Environment="PATH=/caserver/api/venv/bin"
-ExecStart=/caserver/api/venv/bin/uwsgi --ini uwsgi.ini
+WorkingDirectory=/home/vagrant/caserver/api
+ExecStart=/usr/local/bin/uwsgi --ini uwsgi.ini
 
 [Install]
 WantedBy=multi-user.target

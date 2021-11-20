@@ -23,9 +23,6 @@ CREATE TABLE certificate_issuing_status
     PRIMARY KEY (rid))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-create user certmanager@172.27.0.1 identified by 'SniaVj5YQnKSXXVu';
-grant all privileges on *.* to certmanager@172.27.0.1 with grant option;
-
 create user certmanager@172.27.0.2 identified by 'SniaVj5YQnKSXXVu';
 grant insert on imovies.users to certmanager@172.27.0.2;
 grant insert on imovies.certificate_issuing_status to certmanager@172.27.0.2;
