@@ -30,7 +30,7 @@ Seem to work fine, no problem there
 Ran into some issues when building the project
 
 ## Things that need to be done before submitting the project
-- Check all the TODOs in the project
+- Check all the TODOs in the project then do `vagrant destroy` `vagrant up`
 - Change the vagrant user to admin user with a hard password
 - Disable ssh vagrant
 - Disable the no password sudo property of the vagrant user
