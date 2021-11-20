@@ -19,7 +19,10 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "caserver" do |caserver|
     caserver.vm.box = OS
-    caserver.vm.provision "file", source: "./caserver", destination: "caserver"
+    caserver.vm.provision "file", source: "./caserver/nginx", destination: "caserver/nginx"
+    caserver.vm.provision "file", source: "./caserver/intermediate", destination: "caserver/intermediate"
+    caserver.vm.provision "file", source: "./caserver/cert", destination: "caserver/cert"
+    caserver.vm.provision "file", source: "./caserver/api", destination: "caserver/api"
     caserver.vm.provision "shell", path: "./caserver/setup_caserver.sh"
     caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
     caserver.vm.network "forwarded_port", guest: 443, host: 8083
@@ -40,8 +43,8 @@ config.vm.define "webserver" do |wb|
 
   config.vm.define "backupserver" do |bk|
     bk.vm.box = OS
-    wb.vm.provision "shell", path: "./backupserver/setup_webserver.sh"
-    caserver.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
+    bk.vm.provision "shell", path: "./backupserver/setup_webserver.sh"
+    bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
   end
 
  config.vm.define "firewall" do |fr|
