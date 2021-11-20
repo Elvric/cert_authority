@@ -7,6 +7,9 @@ After=network.target
 User=www-data
 Group=www-data
 WorkingDirectory=/home/vagrant/caserver/api
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
 ExecStart=/usr/local/bin/uwsgi --ini uwsgi.ini
 
 [Install]

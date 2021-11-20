@@ -10,3 +10,6 @@ sudo apt install python3 python3-pip -y
 cd caserver/api
 pip3 install -r requirements.txt
 sudo systemctl restart nginx
+sudo systemctl link /home/vagrant/caserver/api/caserver.service
+sudo systemctl enable caserver.service
+sudo systemctl start caserver.service

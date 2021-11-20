@@ -21,5 +21,8 @@ sudo chown mysql /etc/mysql/ssl/db-key.pem
 sudo chmod 644 /etc/mysql/ssl/cacert.pem
 sudo chmod 644 /etc/mysql/ssl/db-cert.pem
 sudo chmod 600 /etc/mysql/ssl/db-key.pem
-sudo sed -i -e "s/127.0.0.1/172.27.0.3/g" /etc/mysql/mysql.conf.d/mysqld.cnf 
+# TODO change to a specific endpoint
+#sudo sed -i -e "s/127.0.0.1/172.27.0.3/g" /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo sed -i -e "s/127.0.0.1/0.0.0.0/g" /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo sed -i -r 's/^#( general_log)/\1/' /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql

@@ -1,6 +1,7 @@
 #!/bin/sh
 # TODO to be uncommented in final version
-#sudo apt update
+sudo apt update
+sudo apt install net-tools -y
 #sudo apt install -y iptables
 #sudo iptables -P INPUT DROP
 #sudo iptables -P FORWARD DROP
