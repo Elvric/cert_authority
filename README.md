@@ -11,12 +11,16 @@ All the setup is in the `Vagrantfile`
 `vagrant destroy` destroys the VM similar to `docker-compose down`  
 `vagrant destroy [name]` only destroys the VM mentioned  
 `vagrant provision` run all the provision commands in the `VagrantFile`  
-`vagrant provision [name]` only runs the provision of the machine specified
+`vagrant provision [name]` only runs the provision of the machine specified  
 `vagrant status` shows you what services are currently running
 
 `vagrant ssh [name]` ssh you inside the VM mentioned,
 
 **You can also see the VMs by opening virtual box**
+
+## Installing Vagrant
+Follow this [link](https://www.vagrantup.com/downloads) and your wishes shall
+be granted
 
 ## TODOS
 
