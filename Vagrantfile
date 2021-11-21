@@ -44,7 +44,7 @@ config.vm.define "webserver" do |wb|
 
   config.vm.define "backupserver" do |bk|
     bk.vm.box = OS
-    bk.vm.provision "shell", path: "./backupserver/setup_webserver.sh"
+    bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
     bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
   end
 
