@@ -2,7 +2,8 @@
 # TODO to be uncommented in final version
 sudo apt update
 sudo apt install net-tools -y
-sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+sudo sed -i -r "s/^#(net.ipv4.ip_forward=1)/\1/" /etc/sysctl.conf
+sudo sysctl -p
 #sudo apt install -y iptables
 #sudo iptables -P INPUT DROP
 #sudo iptables -P FORWARD DROP

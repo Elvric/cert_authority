@@ -20,17 +20,20 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "caserver" do |caserver|
     caserver.vm.box = OS
+    caserver.vm.network "forwarded_port", guest: 443, host: 8083
+    caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
     caserver.vm.provision "file", source: "./caserver/nginx", destination: "caserver/nginx"
     caserver.vm.provision "file", source: "./caserver/intermediate", destination: "caserver/intermediate"
     caserver.vm.provision "file", source: "./caserver/cert", destination: "caserver/cert"
     caserver.vm.provision "file", source: "./caserver/api", destination: "caserver/api"
     caserver.vm.provision "shell", path: "./caserver/setup_caserver.sh"
-    caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
-    caserver.vm.network "forwarded_port", guest: 443, host: 8083
+    caserver.vm.provision "shell", path: "./caserver/routing_vagrant.sh", run: "always"
   end
 
 config.vm.define "webserver" do |wb|
     wb.vm.box = OS
+    wb.vm.network "private_network", ip: "172.26.0.2", virtualbox__intnet: "dmz"
+    wb.vm.network "forwarded_port", guest: 443, host: 4443
     wb.vm.provision "file", source: "./webserver/cert", destination: "webserver/cert"
     wb.vm.provision "file", source: "./webserver/nginx", destination: "webserver/nginx"
     wb.vm.provision "file", source: "./webserver/frontend/src", destination: "webserver/frontend/src"
@@ -38,8 +41,7 @@ config.vm.define "webserver" do |wb|
     wb.vm.provision "file", source: "./webserver/frontend/package.json", destination: "webserver/frontend/package.json"
     wb.vm.provision "file", source: "./webserver/frontend/package-lock.json", destination: "webserver/frontend/package-lock.json"
     wb.vm.provision "shell", path: "./webserver/setup_webserver.sh"
-    wb.vm.network "private_network", ip: "172.26.0.2", virtualbox__intnet: "dmz"
-    wb.vm.network "forwarded_port", guest: 443, host: 4443
+    wb.vm.provision "shell", path: "./webserver/routing_vagrant.sh", run: "always"
   end
 
   config.vm.define "backupserver" do |bk|
