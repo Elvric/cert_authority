@@ -1,6 +1,10 @@
 # MOVE YOUR VENV from caserver/api to caserver 
 otherwise vagrant will try to copy it to the CA VM (taking too much time)
 
+# Installing Vagrant
+Follow this [link](https://www.vagrantup.com/downloads) and your wishes shall
+be granted
+
 
 # Virtual Machines and Vagrant
 When running vagrant ensure that you are in the root directory of this project.
@@ -17,10 +21,6 @@ All the setup is in the `Vagrantfile`
 `vagrant ssh [name]` ssh you inside the VM mentioned,
 
 **You can also see the VMs by opening virtual box**
-
-## Installing Vagrant
-Follow this [link](https://www.vagrantup.com/downloads) and your wishes shall
-be granted
 
 ## TODOS
 
