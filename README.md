@@ -44,6 +44,9 @@ Seem to work fine, no problem there
 Issue when reaching the caserver from the webserver. The connection between webserver to 
 caserver is settup though.
 
+### Firewall
+Settup and running
+
 ## Things that need to be done before submitting the project
 - Check all the TODOs in the project then do `vagrant destroy` `vagrant up`
 - Change the vagrant user to admin user with a hard password
