@@ -5,6 +5,16 @@ otherwise vagrant will try to copy it to the CA VM (taking too much time)
 Follow this [link](https://www.vagrantup.com/downloads) and your wishes shall
 be granted
 
+# Installing the Webserver
+In order to keep the attack surface the VM as small as possible we do not install 
+npm or nodejs on the server everything is built locally
+Hence before using vagrant do the following:
+```shell
+cd webserver/frontend
+nmp install
+npm run build
+```
+From there you can run `vagrant up webserver`.
 
 # Virtual Machines and Vagrant
 When running vagrant ensure that you are in the root directory of this project.
@@ -31,7 +41,8 @@ Seem to work fine, no problem there
 Seem to work fine, no problem there
 
 ### Webserver
-Ran into some issues when building the project
+Issue when reaching the caserver from the webserver. The connection between webserver to 
+caserver is settup though.
 
 ## Things that need to be done before submitting the project
 - Check all the TODOs in the project then do `vagrant destroy` `vagrant up`
