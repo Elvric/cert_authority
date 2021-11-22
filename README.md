@@ -41,8 +41,8 @@ Seem to work fine, no problem there
 Seem to work fine, no problem there
 
 ### Webserver
-Issue when reaching the caserver from the webserver. The connection between webserver to 
-caserver is settup though.
+- Need to add user authentication with certificate + admin authentication
+- Need to save user certificate to backup
 
 ### Firewall
 Settup and running

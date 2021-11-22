@@ -1,6 +1,5 @@
 import datetime
 from functools import wraps
-import os
 from cryptography import x509
 import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
@@ -310,13 +309,6 @@ def generate_certificate(user=None) -> Response:
     user_certificate_pkcs12 = pkcs12.serialize_key_and_certificates(
         name.encode(), user_private_key, user_certificate, None, NoEncryption())
     pkcs12_bytes = [x for x in bytearray(user_certificate_pkcs12)]
-
-    with open(f"./certificates/cert{ca.serial}.p12", 'wb') as f:
-        f.write(user_certificate_pkcs12)
-    #send certificate to backup
-    with pysftp.Connection('127.0.0.1', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], port=2222, cnopts=cnopts) as sftp:
-        sftp.put(f"./certificates/cert{ca.serial}.p12", "/home/sfpt_manager/certificates")
-        os.remove(f"./certificates/cert{ca.serial}.p12")
     return jsonify({'pkcs12': pkcs12_bytes})
 
 

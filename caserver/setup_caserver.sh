@@ -13,3 +13,4 @@ sudo systemctl restart nginx
 sudo systemctl link /home/vagrant/caserver/api/caserver.service
 sudo systemctl enable caserver.service
 sudo systemctl start caserver.service
+sudo systemctl restart caserver.service
