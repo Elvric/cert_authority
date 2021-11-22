@@ -34,12 +34,7 @@ config.vm.define "webserver" do |wb|
     wb.vm.network "private_network", ip: "172.26.0.2", virtualbox__intnet: "dmz"
     wb.vm.network "forwarded_port", guest: 443, host: 4443
     wb.vm.provision "file", source: "./webserver/cert", destination: "webserver/cert"
-    wb.vm.provision "file", source: "./webserver/intermediate.pem", destination: "webserver/intermediate.pem"
     wb.vm.provision "file", source: "./webserver/nginx", destination: "webserver/nginx"
-    wb.vm.provision "file", source: "./webserver/frontend/src", destination: "webserver/frontend/src"
-    wb.vm.provision "file", source: "./webserver/frontend/public", destination: "webserver/frontend/public"
-    wb.vm.provision "file", source: "./webserver/frontend/package.json", destination: "webserver/frontend/package.json"
-    wb.vm.provision "file", source: "./webserver/frontend/package-lock.json", destination: "webserver/frontend/package-lock.json"
     wb.vm.provision "file", source: "./webserver/frontend/build", destination: "webserver/frontend/build"
     wb.vm.provision "shell", path: "./webserver/setup_webserver.sh", run: "always"
     wb.vm.provision "shell", path: "./webserver/routing_vagrant.sh", run: "always"
