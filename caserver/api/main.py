@@ -171,59 +171,31 @@ def verify_user_authentication():
         return make_response("Wrong credentials", 403)
 
 
-@app.route("/api/login_with_cert", methods=['POST'])
+@app.route("/api/login_with_cert", methods=['GET'])
 def verify_user_authentication_cert():
     """ When a user connects to the CA via the web server interface,
     this function is called to verify this user's certificate.
-    The certificate must be in PKCS12 format.
-    The certificate is checked against the Intermediate CA private key.
-
-    [body]: { "cert": [] } is an array of int
+    The certificate must be stored and not revoked
 
     Return true if verification is successful, false otherwise."""
 
-    # load pkcs12 format
-    body = request.get_json()
-    cert = bytearray(body["cert"])
-    certificate = None
-    try:
-        pvt_key, certificate, additional_certs = pkcs12.load_key_and_certificates(
-            cert, b'')
-        if certificate == None:
-            return make_response("Bad format for certificate", 500)
-        # Some useful methods
-        # print(certificate.serial_number) just because serial is a useful identifier
-        # print(b64.b64encode(certificate.public_bytes(Encoding.PEM)).decode())
-        pem_encoding = serialize_cert(certificate)
-        #print(deserialize_cert(data), "\n\n", certificate)
+    serial = request.headers["X-serial"]
+    if serial == None:
+        make_response("Header missing", 500)
+    # to do, check that the certificate is actually stored
+    query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
+    cursor.execute(query, (serial))
 
-        INTM_PUB_KEY.verify(
-            certificate.signature,
-            certificate.tbs_certificate_bytes,
-            # Depends on the algorithm used to create the certificate
-            padding.PKCS1v15(),
-            certificate.signature_hash_algorithm,)
-
-        # to do, check that the certificate is actually stored
-        query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND pem_encoding = %s AND revoked = 0;"
-        cursor.execute(query, (certificate.serial_number, pem_encoding))
-
-        uid = cursor.fetchone()[0]
-        if uid != None:  # checks if the user is in the database, if yes generate jwt
-            query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
-            cursor.execute(query, (uid,))
-            isadmin = cursor.fetchone()[0]
-            token = jwt.encode(
-                {'uid': uid, 'admin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
-            return jsonify({'token': token})
-        else:
-            return make_response("Wrong credentials", 403)
-    except:
-        if certificate is None:
-            print("Bad Format for Received Client Certificate\n")
-        else:
-            print("Invalid Signature on client certificate\n")
-        return make_response("Invalid certificate", 403)
+    uid = cursor.fetchone()[0]
+    if uid != None:  # checks if the user is in the database, if yes generate jwt
+        query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
+        cursor.execute(query, (uid,))
+        isadmin = cursor.fetchone()[0]
+        token = jwt.encode(
+            {'uid': uid, 'admin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
+        return jsonify({'token': token})
+    else:
+        return make_response("Wrong credentials", 403)
 
 ##########################################
 #                                        #

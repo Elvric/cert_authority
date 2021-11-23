@@ -16,7 +16,7 @@ const axios = require("axios").default;
 
 export default function Home() {
     const AuthContext = AuthConsumer();
-    const {isadmin} = !AuthContext.isAdmin;
+    const isadmin = AuthContext.isAdmin;
     //const isadmin = true;
     const [CAState, setCAState] = useState({serial: 0, issued: 0, revoked: 0});
     console.log(CAState);
