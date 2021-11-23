@@ -111,8 +111,9 @@ def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         token = None
-        if 'x-access-tokens' in request.headers:
-            token = request.headers['x-access-tokens']
+        is_admin = False
+        if 'token' in request.cookies:
+            token = request.cookies.get('token')
         if not token:
             return make_response("403 unauthorized", 403)
         try:
@@ -125,11 +126,12 @@ def token_required(f):
             query = "SELECT * FROM imovies.users WHERE uid = %s"
             cursor.execute(query, (data['uid'],))
 
+            is_admin = data.get('isAdmin', False)
             current_user = cursor.fetchone()
         except:
             return jsonify({'message': 'token is invalid'})
 
-        return f(current_user, *args, **kwargs)
+        return f(current_user, is_admin, *args, **kwargs)
 
     return decorator
 
@@ -138,6 +140,24 @@ def token_required(f):
 #             AUTH ENDPOINTS             #
 #                                        #
 ##########################################
+
+
+@app.route("/api/is_logged_in", methods=['GET'])
+@token_required
+def verify_is_user_logged(user, is_admin):
+    """ Verify that an user's token cookie is valid
+    """
+    return make_response(jsonify({"authed": True, "isAdmin": False}), 200)
+
+
+@app.route("/api/logout", methods=['GET'])
+@token_required
+def logout_user(user, is_admin):
+    res = make_response("OK", 200)
+    res.delete_cookie('token')
+    return res
+
+
 @app.route("/api/login", methods=['POST'])
 def verify_user_authentication():
     """ When a user connects to the CA via the web server interface,
@@ -166,7 +186,10 @@ def verify_user_authentication():
         isadmin = cursor.fetchone()[0]
         token = jwt.encode(
             {'uid': uid, 'admin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
-        return jsonify({'token': token})
+
+        res = make_response(jsonify({"authed": True, "isAdmin": False}), 200)
+        res.set_cookie('token', token, secure=True, httponly=True)
+        return res
     else:
         return make_response("Wrong credentials", 403)
 
@@ -193,7 +216,11 @@ def verify_user_authentication_cert():
         isadmin = cursor.fetchone()[0]
         token = jwt.encode(
             {'uid': uid, 'admin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
-        return jsonify({'token': token})
+
+        res = make_response(jsonify({"authed": True, "isAdmin": isadmin}), 200)
+        res.set_cookie('token', token, secure=True, httponly=True)
+        return res
+
     else:
         return make_response("Wrong credentials", 403)
 
@@ -206,7 +233,7 @@ def verify_user_authentication_cert():
 
 @app.route("/api/info", methods=['GET'])
 @token_required
-def get_user_info(user):  # TODO: jwt type?
+def get_user_info(user, is_admin):  # TODO: jwt type?
     if user == None:
         return make_response("How are you even here?", 500)
     else:
@@ -216,7 +243,7 @@ def get_user_info(user):  # TODO: jwt type?
 
 @app.route("/api/modify", methods=["POST"])
 @token_required
-def modify_user_info(user):
+def modify_user_info(user, is_admin):
     updated = request.get_json()
     if user == None:
         return make_response("How are you even here?", 500)
@@ -239,7 +266,7 @@ def modify_user_info(user):
 
 @app.route("/api/certificate", methods=['GET'])
 @token_required
-def generate_certificate(user=None) -> Response:
+def generate_certificate(user, is_admin) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
     given Json Web Token (JWT), sign it with INTM_CA's private key."""
     """
@@ -286,7 +313,7 @@ def generate_certificate(user=None) -> Response:
 
 @app.route("/api/revoke", methods=['POST'])
 @token_required
-def revoke_cert(user):
+def revoke_cert(user, is_admin):
     if user == None:
         return make_response("How are you even here?", 500)
     else:
@@ -334,13 +361,11 @@ def revoke_cert(user):
 
 @app.route("/api/admin", methods=["GET"])
 @token_required
-def get_ca_status(user):
+def get_ca_status(user, is_admin):
     if user == None:
         return make_response("WTF?", 500)
-    query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
-    cursor.execute(query, (user[0],))
-    isadmin = cursor.fetchone()[0]
-    if not isadmin:
+
+    if not is_admin:
         return make_response("Not an admin!", 403)
     else:
         return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked})
