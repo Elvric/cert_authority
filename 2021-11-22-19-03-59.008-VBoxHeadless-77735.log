@@ -1,0 +1,12 @@
+Log created: 2021-11-22T19:03:59.085837000Z
+Process ID:  77735 (0x12fa7)
+Parent PID:  4607 (0x11ff)
+Executable:  /usr/lib/virtualbox/VBoxHeadless
+Arg[0]: /usr/lib/virtualbox/VBoxHeadless
+Arg[1]: --comment
+Arg[2]: cert_authority_firewall_1637598990783_7830
+Arg[3]: --startvm
+Arg[4]: 105f3525-fa35-49be-aad6-735ef0c7cb16
+Arg[5]: --vrde
+Arg[6]: config
+AddRef: illegal refcnt=3221225469 state=2
