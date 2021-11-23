@@ -66,7 +66,7 @@ function useAuth() {
         setState((s) => ({ ...s, isLoading: false }));
       }
     },
-    loginWithCert: async (cert) => {
+    loginWithCert: async () => {
       // const instance = axios.create({
       //   httpsAgent: new https.Agent({
       //     ca: [ fs.readFileSync('server-cert.pem') ], //root CA cert
@@ -76,9 +76,7 @@ function useAuth() {
       //   baseURL : 'https://webserver.imovies/api/login_with_cert'
       // });
       try {
-        const res = await axios.post("/api/login_with_cert", {
-          cert,
-        });
+        const res = await axios.get("/api/login_with_cert");
 
         if (res.status === 200) {
           const token = res.data.token;
