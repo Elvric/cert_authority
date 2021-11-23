@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.x509.oid import NameOID
 
 from flask import Flask, request, jsonify, Response
+import logging
 import hashlib
 from flask.helpers import make_response
 import mysql.connector
@@ -15,6 +16,8 @@ import jwt
 import datetime as dt
 import base64 as b64
 import pysftp
+
+logging.basicConfig(filename='error.log',level=logging.DEBUG)
 
 cnopts = pysftp.CnOpts()
 cnopts.hostkeys = None
@@ -202,9 +205,10 @@ def verify_user_authentication_cert():
 
     Return true if verification is successful, false otherwise."""
 
-    serial = request.headers["X-serial"]
+    serial = request.headers["X-Custom-Referrer"]
+    app.logger.debug(request.headers)
     if serial == None:
-        make_response("Header missing", 500)
+        make_response("Header missing", 505)
     # to do, check that the certificate is actually stored
     query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
     cursor.execute(query, (serial))
