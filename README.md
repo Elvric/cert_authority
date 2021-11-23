@@ -44,6 +44,12 @@ Seem to work fine, no problem there
 - Need to add user authentication with certificate + admin authentication
 - Need to save user certificate to backup
 
+#### Certificate Authentication
+- 1: user uploads his pkcs12 file into browser (use chrome or chromium cause Firefox has a bug wrt pkcs12 that are not encrypted).
+- 2: user tries to go to login_w_cert. If he has a certificate he can access the page, ow Nginx throws 403
+- 3: user clicks Login and triggers a get request to api/login_with_cert. From here nginx will proxy the request to the backend adding the serial of the certificate in the header as X-serial
+- 4: the backend will look for the certificate using the serial trying to see if the certificate is still valid and then if the owner is a admin
+
 ### Firewall
 Settup and running
 
