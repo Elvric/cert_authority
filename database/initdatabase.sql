@@ -43,6 +43,7 @@ grant select on imovies.certificate_issuing_status to certmanager@172.27.0.2;
 flush privileges;
 
 insert into isadmin select uid,0 from users;
+update isadmin SET isadmin=1 WHERE uid="ps";
 
 delimiter |
 CREATE TRIGGER isadminInsert AFTER INSERT ON users
