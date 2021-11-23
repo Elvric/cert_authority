@@ -116,69 +116,95 @@ function EditModal(props) {
 
 function RevokeModal(props) {
   const [uploadFile, setUploadFile] = useState(null);
+  const [certificates, setCertificates] = useState([]); // certs of shape [serial: Int, revoked: Int]
 
-  function validateForm() {
-    return uploadFile !== null;
-  }
-
-  const handleRevoke = async function (e) {
-    e.preventDefault();
-    const dataArray = new FormData();
-    dataArray.append("uploadFile", uploadFile);
-    let uploaded = uploadFile[0]; //file object
-    var reader = new FileReader();
-    var cert = [];
-    reader.readAsArrayBuffer(uploaded);
-    reader.onloadend = async function (evt) {
-      if (evt.target.readyState == FileReader.DONE) {
-        var arrayBuffer = evt.target.result;
-        var array = new Uint8Array(arrayBuffer);
-        for (var i = 0; i < array.length; i++) {
-          cert.push(array[i]);
-        }
+  useEffect(() => {
+    if (props.show) {
+      (async () => {
         try {
-          const res = await axios.post("/api/revoke", {
-            cert,
-          });
-          if (res.status == 200) {
-            window.alert("Revoked!");
+          const res = await axios.get("/api/get_certs");
+          if (res.status === 200) {
+            setCertificates([...res.data]);
           }
         } catch (err) {
-          console.log(err);
-          window.alert("Something went wrong!");
-        } finally {
-          props.setShow(false);
+          window.alert("Error while fetching certificates" + err);
         }
+      })();
+    }
+  }, [props.show]);
+
+  const handleRevoke = async (serial) => {
+    try {
+      const res = await axios.post("/api/revoke", { serial });
+      if (res.status === 200) {
+        window.alert("Certificate revoked!");
+      } else {
+        window.alert("Error while revoking certificate!");
       }
-    };
+    } catch (err) {
+      window.alert("Error while revoking certificate!");
+    } finally {
+      props.setShow(false);
+    }
   };
+
+  const handleRevokeAll = async () => {
+    if (window.confirm("Are you sure you want to revoke all certificates?")) {
+      try {
+        const res = await axios.post("/api/revoke_all");
+        if (res.status == 200) {
+          window.alert("Revoked!");
+        }
+      } catch (err) {
+        console.log(err);
+        window.alert("Something went wrong!");
+      } finally {
+        props.setShow(false);
+      }
+    }
+  };
+
+  const valid_certs = certificates.filter((cert) => cert[1] === 0);
 
   return (
     <Modal show={props.show} onHide={() => props.setShow(false)}>
       <ModalHeader closeButton>
-        <ModalTitle>Revoke PKCS12 Certificate</ModalTitle>
+        <ModalTitle>Manage PKCS12 Certificates</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <Form onSubmit={handleRevoke}>
-          <Form.Group controlId="formFile" className="mb-3">
-            <Form.Label>Upload your PKCS12 certificate here</Form.Label>
-            <Form.Control
-              type="file"
-              onChange={(e) => setUploadFile(e.target.files)}
-            />
-          </Form.Group>
-          <div className="RevokeButton">
-            <Button
-              block
-              variant="danger"
-              size="lg"
-              type="submit"
-              disabled={!validateForm()}
-            >
-              Revoke
-            </Button>
-          </div>
-        </Form>
+        List of valid certificates
+        <Container className="pr-5 mr-5">
+          {valid_certs.length === 0 ? (
+            <em>There are no valid certificates for this account</em>
+          ) : (
+            valid_certs.map((cert) => (
+              <Row className="pt-1">
+                <Col>Serial: </Col>
+                <Col>{cert[0]}</Col>
+                <Col>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleRevoke(cert[0])}
+                  >
+                    Revoke
+                  </Button>
+                </Col>
+              </Row>
+            ))
+          )}
+        </Container>
+        <Button
+          onClick={handleRevokeAll}
+          block
+          className="center mt-4"
+          variant="danger"
+          type="submit"
+          size="sm"
+          disabled={valid_certs.length === 0}
+        >
+          Revoke all certificates
+        </Button>
       </ModalBody>
     </Modal>
   );
@@ -319,8 +345,8 @@ export default function Home() {
             </Button>
           </Container>
           <Container className="pt-1 pr-5 m-5 d-flex justify-content-center">
-            <Button variant="danger" onClick={() => setShowRevoke(true)}>
-              Revoke Certificate
+            <Button variant="warning" onClick={() => setShowRevoke(true)}>
+              Manage Certificates
             </Button>
           </Container>
           <Container

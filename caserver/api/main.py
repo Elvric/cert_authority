@@ -17,7 +17,7 @@ import datetime as dt
 import base64 as b64
 import pysftp
 
-logging.basicConfig(filename='error.log',level=logging.DEBUG)
+# logging.basicConfig(filename='/var/log/flask_error.log', level=logging.DEBUG)
 
 cnopts = pysftp.CnOpts()
 cnopts.hostkeys = None
@@ -315,6 +315,19 @@ def generate_certificate(user, is_admin) -> Response:
     return jsonify({'pkcs12': pkcs12_bytes})
 
 
+@app.route("/api/get_certs", methods=["GET"])
+@token_required
+def get_all_certs(user, is_admin):
+    """ Returns all certificates issued by the CA. """
+    if user is None:
+        return make_response("How are you even here?", 500)
+
+    query = "SELECT serial, revoked FROM imovies.certificates WHERE uid=%s ;"
+    cursor.execute(query, (user[0], ))
+    certs = cursor.fetchall()
+    return jsonify(certs)
+
+
 @app.route("/api/revoke", methods=['POST'])
 @token_required
 def revoke_cert(user, is_admin):
@@ -323,42 +336,56 @@ def revoke_cert(user, is_admin):
     else:
         # load pkcs12 format
         body = request.get_json()
-        cert = bytearray(body["cert"])
+        serial = body["serial"]
+        uid = user[0]
+
         certificate = None
         try:
-            pvt_key, certificate, additional_certs = pkcs12.load_key_and_certificates(
-                cert, None)
-            if certificate == None:
-                return make_response("Bad Format for Cert", 500)
-            # Some useful methods
-            # print(certificate.serial_number) just because serial is a useful identifier
-            # print(b64.b64encode(certificate.public_bytes(Encoding.PEM)).decode())
-            pem_encoding = serialize_cert(certificate)
-            #print(deserialize_cert(data), "\n\n", certificate)
-
-            INTM_PUB_KEY.verify(
-                certificate.signature,
-                certificate.tbs_certificate_bytes,
-                # Depends on the algorithm used to create the certificate
-                padding.PKCS1v15(),
-                certificate.signature_hash_algorithm,)
             # to do, check that the certificate is actually stored
-            query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND pem_encoding = %s AND revoked = 0;"
-            cursor.execute(query, (certificate.serial_number, pem_encoding))
+            query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
+            cursor.execute(query, (serial, ))
 
             uid = cursor.fetchone()
             if uid == None:
                 return make_response("I don't recognize this certificate dude!", 500)
             else:
-                query = "UPDATE imovies.certificates SET revoked = 1 WHERE serial = %s AND uid = %s AND pem_encoding = %s;"
+                query = "UPDATE imovies.certificates SET revoked = 1 WHERE serial = %s AND uid = %s;"
                 cursor.execute(
-                    query, (certificate.serial_number, user[0], pem_encoding))
+                    query, (serial, user[0], ))
                 imovies_db.commit()
                 ca.revoked += 1
                 query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
                 cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
                 imovies_db.commit()
                 return make_response("Hasta la vista certificate!", 200)
+        except cryptography.exceptions.InvalidSignature:
+            return make_response("Invalid Certificate", 500)
+
+
+@app.route("/api/revoke_all", methods=['POST'])
+@token_required
+def revoke_all_certs(user, is_admin):
+    if user == None:
+        return make_response("How are you even here?", 500)
+    else:
+        try:
+            query = "SELECT COUNT(*) FROM imovies.certificates WHERE uid = %s AND revoked = 0;"
+            cursor.execute(query, (user[0], ))
+
+            num_certs = cursor.fetchone()
+
+            query = "UPDATE imovies.certificates SET revoked = 1 WHERE uid = %s;"
+            cursor.execute(
+                query, (user[0],))
+            imovies_db.commit()
+
+            ca.revoked += num_certs[0]
+
+            query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
+            cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
+
+            imovies_db.commit()
+            return make_response("Hasta la vista certificate!", 200)
         except cryptography.exceptions.InvalidSignature:
             return make_response("Invalid Certificate", 500)
 
