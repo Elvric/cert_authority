@@ -1,0 +1,12 @@
+Log created: 2021-11-22T19:03:59.243313000Z
+Process ID:  82042 (0x1407a)
+Parent PID:  4607 (0x11ff)
+Executable:  /usr/lib/virtualbox/VBoxHeadless
+Arg[0]: /usr/lib/virtualbox/VBoxHeadless
+Arg[1]: --comment
+Arg[2]: cert_authority_database_1637598559350_41304
+Arg[3]: --startvm
+Arg[4]: fb5c8c35-fc5d-4b37-b0ae-94f386251f69
+Arg[5]: --vrde
+Arg[6]: config
+AddRef: illegal refcnt=3221225469 state=2
