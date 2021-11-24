@@ -22,8 +22,8 @@ organizationalunit=Intermediate
 email=admin@imovies.ch
 
 #generate interm pvt key
-#openssl genrsa -out ../../caserver/intermediate/private/intermediate.key 2048
-cp pvt_key.pem ../../caserver/intermediate/private/intermediate.key
+openssl genrsa -out ../../caserver/intermediate/private/intermediate.key 2048
+#cp pvt_key.pem ../../caserver/intermediate/private/intermediate.key
 #create csr
 openssl req -config intermediate.cnf -new -key ../../caserver/intermediate/private/intermediate.key -out intermediate.csr -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
 #sign request with root CA

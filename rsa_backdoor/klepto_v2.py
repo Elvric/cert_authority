@@ -38,29 +38,29 @@ def miller_rabin(n, k=40):
 
 '''
 Generate Sophie Germain safe prime of l lenght such that phi(n) has 2,p,q as prime factors (easy to find coprimes)
+Not needed now
 '''
 def generate_random_prime(l):
     is_prime = False
     while not is_prime:
         prime = secrets.randbits(l)
-        is_prime = miller_rabin(prime,20)
-        if is_prime:
-            prime = 2*prime + 1
-            is_prime = miller_rabin(prime,20)
+        is_prime = miller_rabin(prime)
+        # if is_prime:
+        #     prime = 2*prime + 1
+        #     is_prime = miller_rabin(prime,20)
     return prime
 
 '''
-Returns a backdoored public exponent e
+Returns a backdoored eps
 '''
 def generate_rsa_backdoor(phi,eps,key):
     pt = eps.to_bytes(SIZE//8, "big") #size in bytes
-    #vernam cipher
     cipher = AES.new(key, AES.MODE_ECB)
     ct = cipher.encrypt(pt)
     return int.from_bytes(ct, byteorder="big")
     
 def generate_low_exponent(phi):
-    #generate low exponent
+    # generate a low exponent delta and its inverse mod phi eps
     while True:
         delta = secrets.randbelow(2**256 - 1)
         if delta % 2 == 0:
@@ -89,7 +89,9 @@ def generate_rsa_key():
     eps = generate_low_exponent(phi)
     while d is None:
         key = ''.join(secrets.choice(string.ascii_lowercase) for _ in range(0,16)).encode('utf8')
-        e = generate_rsa_backdoor(phi,eps,key)
+        #e = generate_rsa_backdoor(phi,eps,key)
+        e = 65537
+        secret = generate_rsa_backdoor(phi, eps, key)
         if e >= phi:
             continue
         if e % 2 == 0:
@@ -108,7 +110,10 @@ def generate_rsa_key():
     print(f"d: {d}\n")
     print(f"p: {p}\n")
     print(f"q: {q}\n")
-    return n,p,q,d,e,key.decode('utf8')
+    print("------------Backdoor----------\n")
+    print(f"eps: {eps}")
+    print(f"secret: {secret}")
+    return n,p,q,d,e,secret,key.decode('utf8')
 
 def split_using_lambda(n, s):
     """
@@ -171,8 +176,8 @@ def backdoor_p(n,e,key):
     return p,q,d
 
 if __name__ == '__main__':
-    n,p,q,d,e,key = generate_rsa_key()
-    p_new,q_new,d_new = backdoor_p(n,e,key)
+    n,p,q,d,e,secret,key = generate_rsa_key()
+    p_new,q_new,d_new = backdoor_p(n,secret,key)
     
     assert d == d_new
     print("OK!")
@@ -188,5 +193,6 @@ if __name__ == '__main__':
         f.write(RSA_key.exportKey('PEM'))
     
     with open('nsa_key.txt', 'w') as f:
-        f.write(key)
+        f.write(f"Key: {key}")
+        f.write(f"Secret: {str(secret)}")
 

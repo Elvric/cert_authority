@@ -7,6 +7,10 @@
 # you're doing.
 OS = "generic/ubuntu2004"
 Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 512
+    v.cpus = 1
+  end
   config.vm.define "database" do |db|
     db.vm.box = OS
     db.vm.provision "file", source: "./database/imovies_users.sql", destination: "imovies_users.sql"

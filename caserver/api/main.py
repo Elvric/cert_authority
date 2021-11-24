@@ -3,10 +3,10 @@ from functools import wraps
 from cryptography import x509
 import cryptography
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.serialization import Encoding, pkcs12, NoEncryption
+from cryptography.hazmat.primitives.serialization import Encoding, pkcs12, NoEncryption, BestAvailableEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.x509.oid import NameOID
-
+from subprocess import call
 from flask import Flask, request, jsonify, Response
 import logging
 import hashlib
@@ -27,7 +27,7 @@ imovies_db = mysql.connector.connect(
     user="certmanager",
     password='SniaVj5YQnKSXXVu',
     database="imovies",
-    ssl_ca='../cert/cacert.pem',  # root CA
+    ssl_ca='/etc/nginx/ssl/cacert.pem',  # root CA
     ssl_verify_cert=True,
 )
 cursor = imovies_db.cursor()
@@ -310,14 +310,14 @@ def generate_certificate(user, is_admin) -> Response:
 
     name = str(user_certificate.serial_number)+"_"+uid
     user_certificate_pkcs12 = pkcs12.serialize_key_and_certificates(
-        name.encode(), user_private_key, user_certificate, None, NoEncryption())
+        name.encode(), user_private_key, user_certificate, None, BestAvailableEncryption(b"pass"))
     pkcs12_bytes = [x for x in bytearray(user_certificate_pkcs12)]
     return jsonify({'pkcs12': pkcs12_bytes})
 
 
 @app.route("/api/get_certs", methods=["GET"])
 @token_required
-def get_all_certs(user, is_admin):
+def get_all_certs(user):
     """ Returns all certificates issued by the CA. """
     if user is None:
         return make_response("How are you even here?", 500)
@@ -406,8 +406,19 @@ def get_new_certificate(uid, user_private_key):
     a_day = datetime.timedelta(1, 0, 0)
     certificate_validity_duration = 365  # in number of days
     user_certificate_builder = x509.CertificateBuilder() \
-        .subject_name(x509.Name([x509.NameAttribute(NameOID.USER_ID, uid)])) \
-        .issuer_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'caserver.imovies')])) \
+        .subject_name(x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME, u"CH"),\
+                                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"VD"),\
+                                x509.NameAttribute(NameOID.LOCALITY_NAME, u"Lausanne"),\
+                                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"IMovies"),\
+                                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"Intermediate"),\
+                                x509.NameAttribute(NameOID.COMMON_NAME, f"{uid}")])) \
+        .issuer_name(x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME, u"CH"),\
+                                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"VD"),\
+                                x509.NameAttribute(NameOID.LOCALITY_NAME, u"Lausanne"),\
+                                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"IMovies"),\
+                                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"Intermediate"),\
+                                x509.NameAttribute(NameOID.COMMON_NAME, u"caserver.imovies")])) \
+        .add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH])) \
         .serial_number(ca.serial) \
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
@@ -415,6 +426,16 @@ def get_new_certificate(uid, user_private_key):
     ca.serial += 1
     ca.issued += 1
     return user_certificate_builder.sign(INTM_PRIVATE_KEY, hashes.SHA256())
+    #cmd_1 = call(f'openssl genrsa \
+    #  -out /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.key 2048', shell=True)
+    #cmd_2 = call(f'openssl req -config /etc/ca/intermediate/intermediate.cnf \
+    #  -key /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.key \
+    #  -new -sha256 -subj "/C=CH/ST=VD/L=Lausanne/O=IMovies/CN={uid}_{ca.serial}"\
+    #  -out /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.csr',shell=True)
+    #cmd_3 = call(f'openssl ca -config /etc/ca/intermediate/intermediate.cnf \
+    #  -extensions usr_cert -days 365 -notext -md sha256 \
+    #  -in /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.csr \
+    #  -out /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.csr', shell=True)
 
 
 if __name__ == "__main__":
