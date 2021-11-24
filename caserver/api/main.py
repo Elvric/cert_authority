@@ -418,11 +418,11 @@ def get_new_certificate(uid, user_private_key):
                                 x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"IMovies"),\
                                 x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"Intermediate"),\
                                 x509.NameAttribute(NameOID.COMMON_NAME, u"caserver.imovies")])) \
-        .add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH])) \
         .serial_number(ca.serial) \
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())
+    user_certificate_builder.add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH]), critical=False)
     ca.serial += 1
     ca.issued += 1
     return user_certificate_builder.sign(INTM_PRIVATE_KEY, hashes.SHA256())
