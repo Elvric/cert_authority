@@ -1,5 +1,4 @@
 #!/bin/bash
-cp ./database/cert/cacert.pem /etc/ssl/certs/
 DBPASSWD=FiE5HF4xHOsPIL9n
 
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $DBPASSWD"
@@ -27,3 +26,9 @@ sudo chmod 600 /etc/mysql/ssl/db-key.pem
 sudo sed -i -e "s/127.0.0.1/0.0.0.0/g" /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo sed -i -r 's/^#( general_log)/\1/' /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql
+
+# rsyslog
+apt install rsyslog-gnutls -y
+cp cert/cacert.pem /etc/ssl/certs/
+cp rsyslog.conf /etc/rsyslog.conf
+systemctl restart rsyslog
