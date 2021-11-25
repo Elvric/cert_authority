@@ -150,8 +150,8 @@ Recover delta by Wiener's low exponent attack (delta is small < l/4)
 Once you have eps and delta, eps*delta - 1 = 0 mod(phi)
 You can recover a factor of n by applying the squaring algo
 """
-def backdoor(e,n,key):
-    ct = e.to_bytes(SIZE//8, "big")
+def wiener(secret,n,key):
+    ct = secret.to_bytes(SIZE//8, "big")
     cipher = AES.new(key, AES.MODE_ECB)
     pt = cipher.decrypt(ct)
     eps = int.from_bytes(pt, "big")
@@ -164,8 +164,8 @@ def backdoor(e,n,key):
         p = split_using_lambda(n, s)
     return p
 
-def backdoor_p(n,e,key):
-    p = backdoor(e,n,key)
+def backdoor(n,e,secret,key):
+    p = wiener(secret,n,key)
     if p is None:
         print("ERROR!!\nSomething went wrong...please try run again")
         exit
@@ -177,7 +177,7 @@ def backdoor_p(n,e,key):
 
 if __name__ == '__main__':
     n,p,q,d,e,secret,key = generate_rsa_key()
-    p_new,q_new,d_new = backdoor_p(n,secret,key)
+    p_new,q_new,d_new = backdoor(n,e,secret,key)
     
     assert d == d_new
     print("OK!")
@@ -194,5 +194,5 @@ if __name__ == '__main__':
     
     with open('nsa_key.txt', 'w') as f:
         f.write(f"Key: {key}")
-        f.write(f"Secret: {str(secret)}")
+        f.write(f" Secret: {str(secret)}")
 
