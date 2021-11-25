@@ -11,6 +11,25 @@ Vagrant.configure("2") do |config|
     v.memory = 512
     v.cpus = 1
   end
+
+  config.vm.define "backupserver" do |bk|
+    bk.vm.box = OS
+    bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
+    bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
+    bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
+    bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
+    bk.vm.provision "shell", path: "./backupserver/routing_vagrant.sh", run: "always"
+  end
+
+ config.vm.define "firewall" do |fr|
+    fr.vm.box = OS
+    fr.vm.provision "file", source: "./firewall/cert", destination: "firewall/cert"
+    fr.vm.provision "file", source: "./firewall/rsyslog.conf", destination: "firewall/rsyslog.conf"
+    fr.vm.provision "shell", path: "./firewall/setup_firewall.sh"
+    fr.vm.network "private_network", ip: "172.27.0.254", virtualbox__intnet: "internal_net"
+    fr.vm.network "private_network", ip: "172.26.0.254", virtualbox__intnet: "dmz"
+  end
+
   config.vm.define "database" do |db|
     db.vm.box = OS
     db.vm.provision "file", source: "./database/imovies_users.sql", destination: "imovies_users.sql"
@@ -47,21 +66,4 @@ config.vm.define "webserver" do |wb|
     wb.vm.provision "shell", path: "./webserver/routing_vagrant.sh", run: "always"
   end
 
-  config.vm.define "backupserver" do |bk|
-    bk.vm.box = OS
-    bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
-    bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
-    bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
-    bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
-    bk.vm.provision "shell", path: "./backupserver/routing_vagrant.sh", run: "always"
-  end
-
- config.vm.define "firewall" do |fr|
-    fr.vm.box = OS
-    fr.vm.provision "file", source: "./firewall/cert", destination: "firewall/cert"
-    fr.vm.provision "file", source: "./firewall/rsyslog.conf", destination: "firewall/rsyslog.conf"
-    fr.vm.provision "shell", path: "./firewall/setup_firewall.sh"
-    fr.vm.network "private_network", ip: "172.27.0.254", virtualbox__intnet: "internal_net"
-    fr.vm.network "private_network", ip: "172.26.0.254", virtualbox__intnet: "dmz"
-  end
 end
