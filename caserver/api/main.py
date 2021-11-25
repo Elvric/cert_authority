@@ -17,7 +17,8 @@ import datetime as dt
 import base64 as b64
 import pysftp
 
-# logging.basicConfig(filename='/var/log/flask_error.log', level=logging.DEBUG)
+logging.basicConfig(
+    filename='/var/log/flask/server_logs.log', level=logging.DEBUG)
 
 cnopts = pysftp.CnOpts()
 cnopts.hostkeys = None
@@ -68,7 +69,7 @@ ca = CA()
 app = Flask(__name__)
 
 # TEMPORARY FOR TESTING, should be set up in the environment
-app.debug = True
+app.debug = False
 # used to sign jwt
 app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
 # creds for sftp
@@ -163,6 +164,7 @@ def verify_is_user_logged(user, is_admin):
 def logout_user(user, is_admin):
     res = make_response("OK", 200)
     res.delete_cookie('token')
+    app.logger.info("User %s logged out", user[0])
     return res
 
 
@@ -197,6 +199,9 @@ def verify_user_authentication():
 
         res = make_response(jsonify({"authed": True, "isAdmin": False}), 200)
         res.set_cookie('token', token, secure=True, httponly=True)
+
+        app.logger.info("User %s logged in", uid)
+
         return res
     else:
         return make_response("Wrong credentials", 403)
@@ -228,6 +233,9 @@ def verify_user_authentication_cert():
 
         res = make_response(jsonify({"authed": True, "isAdmin": isadmin}), 200)
         res.set_cookie('token', token, secure=True, httponly=True)
+
+        app.logger.info("User %s logged in", uid)
+
         return res
 
     else:
@@ -246,7 +254,6 @@ def get_user_info(user, is_admin):  # TODO: jwt type?
     if user == None:
         return make_response("How are you even here?", 500)
     else:
-        print(user)
         return jsonify({"userID": user[0], "password": "****", "firstname": user[2], "lastname": user[1], "email": user[3]})
 
 
@@ -317,6 +324,9 @@ def generate_certificate(user, is_admin) -> Response:
             pkcs12_bytes = [x for x in bytearray(raw)]
             ca.serial += 1
             ca.issued += 1
+
+            app.logger.info(
+                "User %s generated a certificate with serial %s", uid, ca.serial)
             return jsonify({'pkcs12': pkcs12_bytes})
 
     """
@@ -390,6 +400,10 @@ def revoke_cert(user, is_admin):
                 query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
                 cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
                 imovies_db.commit()
+
+                app.logger.info(
+                    "User %s revoked certificate with serial %s", uid[0], serial)
+
                 return make_response("Hasta la vista certificate!", 200)
         except cryptography.exceptions.InvalidSignature:
             return make_response("Invalid Certificate", 500)
@@ -417,6 +431,9 @@ def revoke_all_certs(user, is_admin):
             query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
             cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
 
+            app.logger.info(
+                "User %s revoked all certificates", user[0])
+
             imovies_db.commit()
             return make_response("Hasta la vista certificate!", 200)
         except cryptography.exceptions.InvalidSignature:
@@ -430,6 +447,7 @@ def get_ca_status(user, is_admin):
         return make_response("WTF?", 500)
 
     if not is_admin:
+        app.logger.info("User %s tried to access admin page", user[0])
         return make_response("Not an admin!", 403)
     else:
         return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked})
