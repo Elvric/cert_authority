@@ -47,7 +47,7 @@ Vagrant.configure("2") do |config|
     caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
     caserver.vm.provision "file", source: "./caserver/nginx", destination: "caserver/nginx"
     caserver.vm.provision "file", source: "./caserver/api/intermediate", destination: "caserver/api/intermediate"
-    caserver.vm.provision "file", source: "./caserver/rsyslog.conf", destination: "caserver/rsyslog.conf"
+    caserver.vm.provision "file", source: "./caserver/log", destination: "caserver/log"
     caserver.vm.provision "file", source: "./caserver/cert", destination: "caserver/cert"
     caserver.vm.provision "file", source: "./caserver/api", destination: "caserver/api"
     caserver.vm.provision "shell", path: "./caserver/setup_caserver.sh"
@@ -60,7 +60,7 @@ config.vm.define "webserver" do |wb|
     wb.vm.network "forwarded_port", guest: 443, host: 4443
     wb.vm.provision "file", source: "./webserver/cert", destination: "webserver/cert"
     wb.vm.provision "file", source: "./webserver/nginx", destination: "webserver/nginx"
-    wb.vm.provision "file", source: "./webserver/rsyslog.conf", destination: "webserver/rsyslog.conf"
+    wb.vm.provision "file", source: "./webserver/log", destination: "webserver/log"
     wb.vm.provision "file", source: "./webserver/frontend/build", destination: "webserver/frontend/build"
     wb.vm.provision "shell", path: "./webserver/setup_webserver.sh"
     wb.vm.provision "shell", path: "./webserver/routing_vagrant.sh", run: "always"

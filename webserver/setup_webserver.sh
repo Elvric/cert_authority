@@ -21,5 +21,6 @@ systemctl restart nginx
 # rsyslog
 apt install rsyslog-gnutls -y
 cp webserver/cert/cacert.pem /etc/ssl/certs/
-cp webserver/rsyslog.conf /etc/rsyslog.conf
+cp webserver/log/rsyslog.conf /etc/rsyslog.conf
+cp webserver/log/nginx.conf /etc/rsyslog.d/nginx.conf
 systemctl restart rsyslog
