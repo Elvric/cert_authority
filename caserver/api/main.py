@@ -294,21 +294,21 @@ def generate_certificate(user, is_admin) -> Response:
         with open(f"/etc/ca/intermediate/certificates/{ca.serial}_{uid}.p12", 'rb') as f:
            raw = f.read()
            user_key, user_certificate, adds = pkcs12.load_key_and_certificates(raw, b'pass')
+           pem_encoding = serialize_cert(user_certificate)
            #store in db
            #user_certificate = cert_pkcs12.cert.certificate
-           pem_encoding = serialize_cert(user_certificate)
            query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
-           val = (user_certificate.serial_number, uid, pem_encoding[0:256], int(False))
+           val = (user_certificate.serial_number, uid, pem_encoding, int(False))
            cursor.execute(query, val)
            imovies_db.commit()
        
            # update ca in db
+           ca.serial += 1
+           ca.issued += 1
            query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
            cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
            imovies_db.commit()
            pkcs12_bytes = [x for x in bytearray(raw)]
-           ca.serial += 1
-           ca.issued += 1
            return jsonify({'pkcs12': pkcs12_bytes})
               
     
@@ -427,7 +427,7 @@ def get_ca_status(user, is_admin):
     else:
         return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked})
 
-
+#Useless
 def get_new_certificate(uid, user_private_key):
     a_day = datetime.timedelta(1, 0, 0)
     certificate_validity_duration = 365  # in number of days
