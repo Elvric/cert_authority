@@ -35,9 +35,9 @@ cursor = imovies_db.cursor()
 CA_CERTIFICATE = x509.load_pem_x509_certificate(
     open('/etc/nginx/ssl/cacert.pem', "rb").read())
 INTM_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/cacert.pem', "rb").read())
+    open('/etc/nginx/ssl/intermediate.pem', "rb").read())
 INTM_PRIVATE_KEY = serialization.load_pem_private_key(
-    open('/etc/nginx/ssl/cakey.pem', "rb").read(), password=None)
+    open('/etc/nginx/ssl/intermediate.key', "rb").read(), password=None)
 INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
 
 
@@ -287,7 +287,12 @@ def generate_certificate(user, is_admin) -> Response:
     if user is None:
         return make_response("How are you even here?", 500)
     uid = user[0]
-
+    #cmd = call(f"./intermediate/new_certs.sh {ca.serial} {uid}")
+    #if cmd != 0:
+    #    make_response("err", 503)
+    #else:
+    #    cert_pkcs12 = x509.pkcs12.lo
+    
     # source: https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
     user_private_key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048)
@@ -313,6 +318,7 @@ def generate_certificate(user, is_admin) -> Response:
         name.encode(), user_private_key, user_certificate, None, BestAvailableEncryption(b"pass"))
     pkcs12_bytes = [x for x in bytearray(user_certificate_pkcs12)]
     return jsonify({'pkcs12': pkcs12_bytes})
+    
 
 
 @app.route("/api/get_certs", methods=["GET"])
@@ -422,23 +428,15 @@ def get_new_certificate(uid, user_private_key):
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())
-    user_certificate_builder.add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH]), critical=False)
-    user_certificate_builder.add_extension(x509.KeyUsage(digital_signature=True, content_commitment=True, data_encipherment=True, \
-        key_encipherment=True, key_agreement=True, key_cert_sign=False, crl_sign=False, encipher_only=False, decipher_only=False), critical=True)
+    user_certificate_builder.add_extension(x509.BasicConstraints(ca=False), critical=True)
+    user_certificate_builder.add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH, x509.ExtendedKeyUsageOID.EMAIL_PROTECTION]), critical=False)
+    user_certificate_builder.add_extension(x509.KeyUsage(digital_signature=True, content_commitment=False, data_encipherment=False, \
+        key_encipherment=True, key_agreement=False, key_cert_sign=False, crl_sign=False, encipher_only=False, decipher_only=False), critical=True)
     user_certificate_builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(user_private_key.public_key()), critical=False)
+    user_certificate_builder.add_extension(x509.AuthorityKeyIdentifier.from_public_key(INTM_PRIVATE_KEY.public_key()), critical=False)
     ca.serial += 1
     ca.issued += 1
     return user_certificate_builder.sign(INTM_PRIVATE_KEY, hashes.SHA256())
-    #cmd_1 = call(f'openssl genrsa \
-    #  -out /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.key 2048', shell=True)
-    #cmd_2 = call(f'openssl req -config /etc/ca/intermediate/intermediate.cnf \
-    #  -key /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.key \
-    #  -new -sha256 -subj "/C=CH/ST=VD/L=Lausanne/O=IMovies/CN={uid}_{ca.serial}"\
-    #  -out /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.csr',shell=True)
-    #cmd_3 = call(f'openssl ca -config /etc/ca/intermediate/intermediate.cnf \
-    #  -extensions usr_cert -days 365 -notext -md sha256 \
-    #  -in /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.csr \
-    #  -out /etc/ca/intermediate/pkcs12_files/{uid}_{ca.serial}.csr', shell=True)
 
 
 if __name__ == "__main__":
