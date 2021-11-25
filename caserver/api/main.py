@@ -156,7 +156,7 @@ def token_required(f):
 def verify_is_user_logged(user, is_admin):
     """ Verify that an user's token cookie is valid
     """
-    return make_response(jsonify({"authed": True, "isAdmin": False}), 200)
+    return make_response(jsonify({"authed": True, "isAdmin": is_admin}), 200)
 
 
 @app.route("/api/logout", methods=['GET'])
