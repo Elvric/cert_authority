@@ -1,4 +1,5 @@
 #!/bin/bash
+cp ./database/cert/cacert.pem /etc/ssl/certs/
 DBPASSWD=FiE5HF4xHOsPIL9n
 
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $DBPASSWD"

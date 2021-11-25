@@ -23,9 +23,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "caserver" do |caserver|
     caserver.vm.box = OS
-    caserver.vm.network "forwarded_port", guest: 443, host: 8083
     caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
     caserver.vm.provision "file", source: "./caserver/nginx", destination: "caserver/nginx"
+    caserver.vm.provision "file", source: "./caserver/rsyslog.conf", destination: "caserver/rsyslog.conf"
     caserver.vm.provision "file", source: "./caserver/intermediate", destination: "caserver/intermediate"
     caserver.vm.provision "file", source: "./caserver/cert", destination: "caserver/cert"
     caserver.vm.provision "file", source: "./caserver/api", destination: "caserver/api"
@@ -46,12 +46,16 @@ config.vm.define "webserver" do |wb|
 
   config.vm.define "backupserver" do |bk|
     bk.vm.box = OS
+    bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
+    bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
     bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
     bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
   end
 
  config.vm.define "firewall" do |fr|
     fr.vm.box = OS
+    fr.vm.provision "file", source: "./firewall/cert", destination: "firewall/cert"
+    fr.vm.provision "file", source: "./firewall/rsyslog.conf", destination: "firewall/rsyslog.conf"
     fr.vm.provision "shell", path: "./firewall/setup_firewall.sh"
     fr.vm.network "private_network", ip: "172.27.0.254", virtualbox__intnet: "internal_net"
     fr.vm.network "private_network", ip: "172.26.0.254", virtualbox__intnet: "dmz"

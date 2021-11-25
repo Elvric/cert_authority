@@ -11,7 +11,7 @@ groupadd admin
 users=(dbackup cabackup)
 pass=(bC8LcLh2WuHtJKE7r4D2 admin)
 
-for i in {0..0}; do
+for i in {0..1}; do
   useradd -g sftp_users -d /backup -s /sbin/nologin "${users[i]}"
   echo "${users[i]}":"${pass[i]}" | chpasswd
   mkdir -p "/data/${users[i]}/backup"
@@ -24,5 +24,7 @@ done
 systemctl restart sshd
 
 # Rsyslog
-sed -i -r "s/^#(.*imtcp.*)/\1/" /etc/rsyslog.conf
+apt update
+apt install rsyslog-gnutls -y
+cp ./backupserver/rsyslog.conf /etc/rsyslog.conf
 systemctl restart rsyslog
