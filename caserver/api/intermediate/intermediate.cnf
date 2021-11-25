@@ -1,4 +1,4 @@
-dir             = ./intermediate
+dir             = .
 
 [ ca ]
 default_ca				= CA_default

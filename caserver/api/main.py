@@ -35,9 +35,9 @@ cursor = imovies_db.cursor()
 CA_CERTIFICATE = x509.load_pem_x509_certificate(
     open('/etc/nginx/ssl/cacert.pem', "rb").read())
 INTM_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/cacert.pem', "rb").read())
+    open('/etc/nginx/ssl/intermediate.pem', "rb").read())
 INTM_PRIVATE_KEY = serialization.load_pem_private_key(
-    open('/etc/nginx/ssl/cakey.pem', "rb").read(), password=None)
+    open('/etc/nginx/ssl/intermediate.key', "rb").read(), password=None)
 INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
 
 
