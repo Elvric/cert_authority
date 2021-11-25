@@ -197,7 +197,7 @@ def verify_user_authentication():
         token = jwt.encode(
             {'uid': uid, 'isAdmin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
 
-        res = make_response(jsonify({"authed": True, "isAdmin": False}), 200)
+        res = make_response(jsonify({"authed": True, "isAdmin": isadmin}), 200)
         res.set_cookie('token', token, secure=True, httponly=True)
 
         app.logger.info("User %s logged in", uid)
