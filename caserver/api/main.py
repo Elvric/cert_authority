@@ -287,12 +287,32 @@ def generate_certificate(user, is_admin) -> Response:
     if user is None:
         return make_response("How are you even here?", 500)
     uid = user[0]
-    #cmd = call(f"./intermediate/new_certs.sh {ca.serial} {uid}")
-    #if cmd != 0:
-    #    make_response("err", 503)
-    #else:
-    #    cert_pkcs12 = x509.pkcs12.lo
+    cmd = call(f"/etc/ca/intermediate/new_cert.sh {ca.serial} {uid}", shell=True)
+    if cmd != 0:
+        make_response("err", 503)
+    else:
+        with open(f"/etc/ca/intermediate/certificates/{ca.serial}_{uid}.p12", 'rb') as f:
+           raw = f.read()
+           user_key, user_certificate, adds = pkcs12.load_key_and_certificates(raw, b'pass')
+           #store in db
+           #user_certificate = cert_pkcs12.cert.certificate
+           pem_encoding = serialize_cert(user_certificate)
+           query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
+           val = (user_certificate.serial_number, uid, pem_encoding[0:256], int(False))
+           cursor.execute(query, val)
+           imovies_db.commit()
+       
+           # update ca in db
+           query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
+           cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
+           imovies_db.commit()
+           pkcs12_bytes = [x for x in bytearray(raw)]
+           ca.serial += 1
+           ca.issued += 1
+           return jsonify({'pkcs12': pkcs12_bytes})
+              
     
+    """
     # source: https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
     user_private_key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048)
@@ -315,10 +335,10 @@ def generate_certificate(user, is_admin) -> Response:
 
     name = str(user_certificate.serial_number)+"_"+uid
     user_certificate_pkcs12 = pkcs12.serialize_key_and_certificates(
-        name.encode(), user_private_key, user_certificate, None, BestAvailableEncryption(b"pass"))
+        name.encode(), user_private_key, user_certificate, [CA_CERTIFICATE, INTM_CERTIFICATE], BestAvailableEncryption(b"pass"))
     pkcs12_bytes = [x for x in bytearray(user_certificate_pkcs12)]
     return jsonify({'pkcs12': pkcs12_bytes})
-    
+    """
 
 
 @app.route("/api/get_certs", methods=["GET"])
@@ -428,12 +448,12 @@ def get_new_certificate(uid, user_private_key):
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())
-    user_certificate_builder.add_extension(x509.BasicConstraints(ca=False), critical=True)
+    user_certificate_builder.add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
     user_certificate_builder.add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH, x509.ExtendedKeyUsageOID.EMAIL_PROTECTION]), critical=False)
-    user_certificate_builder.add_extension(x509.KeyUsage(digital_signature=True, content_commitment=False, data_encipherment=False, \
+    user_certificate_builder.add_extension(x509.KeyUsage(digital_signature=True, content_commitment=True, data_encipherment=False, \
         key_encipherment=True, key_agreement=False, key_cert_sign=False, crl_sign=False, encipher_only=False, decipher_only=False), critical=True)
     user_certificate_builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(user_private_key.public_key()), critical=False)
-    user_certificate_builder.add_extension(x509.AuthorityKeyIdentifier.from_public_key(INTM_PRIVATE_KEY.public_key()), critical=False)
+    user_certificate_builder.add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(INTM_PRIVATE_KEY.public_key()), critical=False)
     ca.serial += 1
     ca.issued += 1
     return user_certificate_builder.sign(INTM_PRIVATE_KEY, hashes.SHA256())
