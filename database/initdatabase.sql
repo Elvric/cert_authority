@@ -8,7 +8,7 @@ CREATE TABLE isadmin (
 CREATE TABLE certificates (
     serial int,
     uid varchar(64),
-    pem_encoding varchar(2000) not null,
+    pem_encoding varchar(32768) not null,
     revoked bool not null default 0,
     FOREIGN KEY (uid) REFERENCES users(uid),
     PRIMARY KEY (serial))
