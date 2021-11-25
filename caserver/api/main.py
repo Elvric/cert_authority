@@ -35,9 +35,9 @@ cursor = imovies_db.cursor()
 CA_CERTIFICATE = x509.load_pem_x509_certificate(
     open('/etc/nginx/ssl/cacert.pem', "rb").read())
 INTM_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/intermediate.pem', "rb").read())
+    open('/etc/nginx/ssl/cacert.pem', "rb").read())
 INTM_PRIVATE_KEY = serialization.load_pem_private_key(
-    open('/etc/nginx/ssl/intermediate.key', "rb").read(), password=None)
+    open('/etc/nginx/ssl/cakey.pem', "rb").read(), password=None)
 INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
 
 
@@ -410,19 +410,22 @@ def get_new_certificate(uid, user_private_key):
                                 x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"VD"),\
                                 x509.NameAttribute(NameOID.LOCALITY_NAME, u"Lausanne"),\
                                 x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"IMovies"),\
-                                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"Intermediate"),\
+                                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"CA"),\
                                 x509.NameAttribute(NameOID.COMMON_NAME, f"{uid}")])) \
         .issuer_name(x509.Name([x509.NameAttribute(NameOID.COUNTRY_NAME, u"CH"),\
                                 x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"VD"),\
                                 x509.NameAttribute(NameOID.LOCALITY_NAME, u"Lausanne"),\
                                 x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"IMovies"),\
-                                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"Intermediate"),\
-                                x509.NameAttribute(NameOID.COMMON_NAME, u"caserver.imovies")])) \
+                                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, u"CA"),\
+                                x509.NameAttribute(NameOID.COMMON_NAME, u"imovies")])) \
         .serial_number(ca.serial) \
         .not_valid_before(datetime.datetime.today() - a_day) \
         .not_valid_after(datetime.datetime.today() + a_day * certificate_validity_duration) \
         .public_key(user_private_key.public_key())
     user_certificate_builder.add_extension(x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH]), critical=False)
+    user_certificate_builder.add_extension(x509.KeyUsage(digital_signature=True, content_commitment=True, data_encipherment=True, \
+        key_encipherment=True, key_agreement=True, key_cert_sign=False, crl_sign=False, encipher_only=False, decipher_only=False), critical=True)
+    user_certificate_builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(user_private_key.public_key()), critical=False)
     ca.serial += 1
     ca.issued += 1
     return user_certificate_builder.sign(INTM_PRIVATE_KEY, hashes.SHA256())
