@@ -26,3 +26,8 @@ sudo chmod 600 /etc/mysql/ssl/db-key.pem
 sudo sed -i -e "s/127.0.0.1/0.0.0.0/g" /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo sed -i -r 's/^#( general_log)/\1/' /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql
+
+sudo crontab -l > cron_tmp
+sudo echo "0 5 mysql_backup.sh" > cron_tmp
+sudo crontab cron_tmp
+sudo rm cron_tmp
