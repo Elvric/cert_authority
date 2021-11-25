@@ -217,11 +217,12 @@ def verify_user_authentication_cert():
 
     serial = request.headers["X-Custom-Referrer"]
     app.logger.debug(request.headers)
+    app.logger.debug("SERIAL: "+serial)
     if serial == None:
         make_response("Header missing", 505)
     # to do, check that the certificate is actually stored
     query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
-    cursor.execute(query, (serial))
+    cursor.execute(query, (serial,))
 
     uid = cursor.fetchone()[0]
     if uid != None:  # checks if the user is in the database, if yes generate jwt
