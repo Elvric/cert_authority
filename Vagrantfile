@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
     db.vm.provision "file", source: "./database/rsyslog.conf", destination: "rsyslog.conf"
     db.vm.provision "shell", path: "./database/setup_database.sh"
     db.vm.network "private_network", ip: "172.27.0.3", virtualbox__intnet: "internal_net"
+    db.vm.provision "shell", path: "./database/routing_vagrant.sh", run: "always"
   end
 
   config.vm.define "caserver" do |caserver|
@@ -40,8 +41,9 @@ config.vm.define "webserver" do |wb|
     wb.vm.network "forwarded_port", guest: 443, host: 4443
     wb.vm.provision "file", source: "./webserver/cert", destination: "webserver/cert"
     wb.vm.provision "file", source: "./webserver/nginx", destination: "webserver/nginx"
+    wb.vm.provision "file", source: "./webserver/rsyslog.conf", destination: "webserver/rsyslog.conf"
     wb.vm.provision "file", source: "./webserver/frontend/build", destination: "webserver/frontend/build"
-    wb.vm.provision "shell", path: "./webserver/setup_webserver.sh", run: "always"
+    wb.vm.provision "shell", path: "./webserver/setup_webserver.sh"
     wb.vm.provision "shell", path: "./webserver/routing_vagrant.sh", run: "always"
   end
 
@@ -51,6 +53,7 @@ config.vm.define "webserver" do |wb|
     bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
     bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
     bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
+    bk.vm.provision "shell", path: "./backupserver/routing_vagrant.sh", run: "always"
   end
 
  config.vm.define "firewall" do |fr|

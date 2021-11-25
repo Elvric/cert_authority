@@ -1,5 +1,4 @@
 #!/bin/sh
-cp ./caserver/cert/cacert.pem /etc/ssl/certs/
 apt-get install net-tools nginx -y
 cp webserver/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir -p /etc/nginx/ssl
@@ -18,3 +17,9 @@ ff02::2 ip6-allrouters
 127.0.0.1 ubuntu2004.localdomain
 EOF
 systemctl restart nginx
+
+# rsyslog
+apt install rsyslog-gnutls -y
+cp webserver/cert/cacert.pem /etc/ssl/certs/
+cp webserver/rsyslog.conf /etc/rsyslog.conf
+systemctl restart rsyslog
