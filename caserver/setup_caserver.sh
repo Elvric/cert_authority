@@ -21,7 +21,6 @@ sudo chown www-data:www-data /etc/ca/intermediate/private/intermediate.key
 sudo chown www-data:www-data /etc/ca/intermediate/certificates
 sudo chown www-data:www-data /etc/ca/intermediate/private
 sudo chown www-data:www-data /etc/ca/intermediate/crl
-sudo chown www-data:www-data /etc/ca/intermediate/newcerts
 sudo chmod +x /etc/ca/intermediate/new_cert.sh
 sudo mkdir -p /var/log/flask
 sudo chown www-data:www-data /var/log/flask

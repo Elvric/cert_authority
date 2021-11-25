@@ -1,6 +1,6 @@
 #!/bin/bash
 # use new_cert.sh <serial> <uid> <first_run>
-if [$3 -eq 1]; then
+if [ $3 -eq 1 ]; then
     rm /etc/ca/intermediate/serial
     rm /etc/ca/intermediate/serial*
     rm /etc/ca/intermediate/index.txt

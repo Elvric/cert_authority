@@ -307,7 +307,7 @@ def generate_certificate(user, is_admin) -> Response:
     cmd = call(
         f"/etc/ca/intermediate/new_cert.sh {ca.serial} {uid} {first_run}", shell=True)
     if cmd != 0:
-        make_response("err", 503)
+        return make_response("err", 503)
     else:
         with open(f"/etc/ca/intermediate/certificates/{ca.serial}_{uid}.p12", 'rb') as f:
             raw = f.read()
@@ -332,8 +332,8 @@ def generate_certificate(user, is_admin) -> Response:
             imovies_db.commit()
             pkcs12_bytes = [x for x in bytearray(raw)]
 
-            
             return jsonify({'pkcs12': pkcs12_bytes})
+
 
 @app.route("/api/get_certs", methods=["GET"])
 @token_required
@@ -428,6 +428,7 @@ def get_ca_status(user, is_admin):
         return make_response("Not an admin!", 403)
     else:
         return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked})
+
 
 if __name__ == "__main__":
     app.run()
