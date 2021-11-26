@@ -29,5 +29,6 @@ sudo systemctl restart mysql
 
 sudo crontab -l > cron_tmp
 sudo echo "0 5 mysql_backup.sh" > cron_tmp
+#TODO: send sftp bkp file
 sudo crontab cron_tmp
 sudo rm cron_tmp
