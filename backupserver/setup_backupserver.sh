@@ -7,9 +7,8 @@ EOF
 mkdir -p /data
 chmod 701 /data
 groupadd sftp_users
-groupadd admin
 users=(dbackup cabackup)
-pass=(bC8LcLh2WuHtJKE7r4D2 admin)
+pass=(bC8LcLh2WuHtJKE7r4D2 LZB33eeKa7rhz2PeDjNb)
 
 for i in {0..1}; do
   useradd -g sftp_users -d /backup -s /sbin/nologin "${users[i]}"
