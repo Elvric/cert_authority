@@ -18,6 +18,18 @@ ff02::2 ip6-allrouters
 EOF
 systemctl restart nginx
 
+# firewall
+sudo apt install -y iptables
+sudo iptables -F
+# sudo iptables -P INPUT DROP
+# sudo iptables -P FORWARD DROP
+# sudo iptables -A FORWARD -s 172.26.0.0/24 -j ACCEPT
+# sudo iptables -A FORWARD -p tcp --dport 22 -j ACCEPT
+# sudo iptables -A INPUT -s 172.26.0.0/24 -p tcp --dport 443 -j ACCEPT
+# sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+# sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+
 # rsyslog
 apt install rsyslog-gnutls -y
 cp webserver/cert/cacert.pem /etc/ssl/certs/

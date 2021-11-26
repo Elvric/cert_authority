@@ -6,7 +6,7 @@ CREATE TABLE isadmin (
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE certificates (
-    serial int,
+    serial varchar(16),
     uid varchar(64),
     pem_encoding varchar(32768) not null,
     revoked bool not null default 0,
@@ -17,7 +17,7 @@ CREATE TABLE certificates (
 CREATE TABLE certificate_issuing_status
 (
     rid int,
-    serial int,
+    serial varchar(16),
     issued int,
     revoked int,
     PRIMARY KEY (rid))
