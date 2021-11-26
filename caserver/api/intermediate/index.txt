@@ -1,2 +1,0 @@
-V	221125100009Z		01	unknown	/C=CH/ST=VD/O=IMovies/OU=IMovies/CN=client/emailAddress=admin@imovies.ch
-V	221125102513Z		02	unknown	/C=CH/ST=VD/O=IMovies/OU=CA/CN=client/emailAddress=a

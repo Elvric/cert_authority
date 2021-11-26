@@ -11,22 +11,43 @@ Vagrant.configure("2") do |config|
     v.memory = 512
     v.cpus = 1
   end
+
+  config.vm.define "backupserver" do |bk|
+    bk.vm.box = OS
+    bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
+    bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
+    bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
+    bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
+    bk.vm.provision "shell", path: "./backupserver/routing_vagrant.sh", run: "always"
+  end
+
+ config.vm.define "firewall" do |fr|
+    fr.vm.box = OS
+    fr.vm.provision "file", source: "./firewall/cert", destination: "firewall/cert"
+    fr.vm.provision "file", source: "./firewall/rsyslog.conf", destination: "firewall/rsyslog.conf"
+    fr.vm.provision "shell", path: "./firewall/setup_firewall.sh"
+    fr.vm.network "private_network", ip: "172.27.0.254", virtualbox__intnet: "internal_net"
+    fr.vm.network "private_network", ip: "172.26.0.254", virtualbox__intnet: "dmz"
+  end
+
   config.vm.define "database" do |db|
     db.vm.box = OS
     db.vm.provision "file", source: "./database/imovies_users.sql", destination: "imovies_users.sql"
     db.vm.provision "file", source: "./database/initdatabase.sql", destination: "initdatabase.sql"
     db.vm.provision "file", source: "./database/cert", destination: "cert"
     db.vm.provision "file", source: "./database/my.cnf", destination: "my.cnf"
+    db.vm.provision "file", source: "./database/rsyslog.conf", destination: "rsyslog.conf"
     db.vm.provision "shell", path: "./database/setup_database.sh"
     db.vm.network "private_network", ip: "172.27.0.3", virtualbox__intnet: "internal_net"
+    db.vm.provision "shell", path: "./database/routing_vagrant.sh", run: "always"
   end
 
   config.vm.define "caserver" do |caserver|
     caserver.vm.box = OS
-    caserver.vm.network "forwarded_port", guest: 443, host: 8083
     caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
     caserver.vm.provision "file", source: "./caserver/nginx", destination: "caserver/nginx"
-    caserver.vm.provision "file", source: "./caserver/intermediate", destination: "caserver/intermediate"
+    caserver.vm.provision "file", source: "./caserver/api/intermediate", destination: "caserver/api/intermediate"
+    caserver.vm.provision "file", source: "./caserver/log", destination: "caserver/log"
     caserver.vm.provision "file", source: "./caserver/cert", destination: "caserver/cert"
     caserver.vm.provision "file", source: "./caserver/api", destination: "caserver/api"
     caserver.vm.provision "shell", path: "./caserver/setup_caserver.sh"
@@ -39,21 +60,10 @@ config.vm.define "webserver" do |wb|
     wb.vm.network "forwarded_port", guest: 443, host: 4443
     wb.vm.provision "file", source: "./webserver/cert", destination: "webserver/cert"
     wb.vm.provision "file", source: "./webserver/nginx", destination: "webserver/nginx"
+    wb.vm.provision "file", source: "./webserver/log", destination: "webserver/log"
     wb.vm.provision "file", source: "./webserver/frontend/build", destination: "webserver/frontend/build"
-    wb.vm.provision "shell", path: "./webserver/setup_webserver.sh", run: "always"
+    wb.vm.provision "shell", path: "./webserver/setup_webserver.sh"
     wb.vm.provision "shell", path: "./webserver/routing_vagrant.sh", run: "always"
   end
 
-  config.vm.define "backupserver" do |bk|
-    bk.vm.box = OS
-    bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
-    bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
-  end
-
- config.vm.define "firewall" do |fr|
-    fr.vm.box = OS
-    fr.vm.provision "shell", path: "./firewall/setup_firewall.sh"
-    fr.vm.network "private_network", ip: "172.27.0.254", virtualbox__intnet: "internal_net"
-    fr.vm.network "private_network", ip: "172.26.0.254", virtualbox__intnet: "dmz"
-  end
 end

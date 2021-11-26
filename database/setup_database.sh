@@ -21,14 +21,20 @@ sudo chown mysql /etc/mysql/ssl/db-key.pem
 sudo chmod 644 /etc/mysql/ssl/cacert.pem
 sudo chmod 644 /etc/mysql/ssl/db-cert.pem
 sudo chmod 600 /etc/mysql/ssl/db-key.pem
-# TODO change to a specific endpoint
-#sudo sed -i -e "s/127.0.0.1/172.27.0.3/g" /etc/mysql/mysql.conf.d/mysqld.cnf
-sudo sed -i -e "s/127.0.0.1/0.0.0.0/g" /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo sed -i -e "s/127.0.0.1/172.27.0.3/g" /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo sed -i -r 's/^#( general_log)/\1/' /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql
 
-sudo crontab -l > cron_tmp
-sudo echo "0 5 mysql_backup.sh" > cron_tmp
-#TODO: send sftp bkp file
-sudo crontab cron_tmp
-sudo rm cron_tmp
+# schedule backup
+mkdir backup
+crontab -l > cron_tmp
+echo "0 5 mysql_backup.sh" > cron_tmp
+crontab cron_tmp
+rm cron_tmp
+
+# rsyslog
+apt install rsyslog-gnutls -y
+cp cert/cacert.pem /etc/ssl/certs/
+cp rsyslog.conf /etc/rsyslog.conf
+systemctl restart rsyslog
+>>>>>>> a9b4913d35e678c9e2d8c4798a3aaa4474805bb7
