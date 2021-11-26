@@ -21,7 +21,7 @@ export default function Nav(props) {
     <Container>
       <Navbar sticky="top" variant="light" bg="light">
         <Container fluid className="d-flex justify-content-between">
-          <Navbar.Brand href="#home">
+          <Navbar.Brand href="/home">
             <img
               src="imovies.png"
               width="30"
@@ -48,14 +48,26 @@ export default function Nav(props) {
               </Button>
             )
           ) : (
-            <Button
-              block
-              type="button"
-              onClick={handleLogout}
-              variant="outline-danger"
-            >
-              Logout
-            </Button>
+            <>
+              {AuthContext.state.isAdmin ? (
+                <Button
+                  block
+                  type="button"
+                  variant="outline-warning"
+                  onClick={() => navigate("/admin", { replace: true })}
+                >
+                  Admin
+                </Button>
+              ) : null}
+              <Button
+                block
+                type="button"
+                onClick={handleLogout}
+                variant="outline-danger"
+              >
+                Logout
+              </Button>
+            </>
           )}
         </Container>
       </Navbar>

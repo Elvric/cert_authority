@@ -14,6 +14,7 @@ sudo sysctl -p
 #sudo iptables -A FORWARD -p tcp --dport 22 -j ACCEPT
 #sudo iptables -A FORWARD -s 172.26.0.2 -p tcp --dport 443 -j ACCEPT
 #sudo iptables -A FORWARD -s 172.26.0.2 -p tcp --dport 6514 -j ACCEPT
+#sudo iptables -A INPUT -p icmp --icmp-type echo-request -j REJECT
 
 # Rsyslog
 cp ./firewall/rsyslog.conf /etc/rsyslog.conf

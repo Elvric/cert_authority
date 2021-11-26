@@ -191,13 +191,11 @@ def verify_user_authentication():
     cursor.execute(query, (uid, hashed_checksum))
 
     if cursor.fetchone() != None:  # checks if the user is in the database, if yes generate jwt
-        query = "SELECT isadmin FROM imovies.isadmin WHERE uid = %s;"
-        cursor.execute(query, (uid,))
-        isadmin = cursor.fetchone()[0]
         token = jwt.encode(
-            {'uid': uid, 'isAdmin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
+            {'uid': uid, 'isAdmin': False, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
 
-        res = make_response(jsonify({"authed": True, "isAdmin": isadmin}), 200)
+        # isAdmin always false here because admin functionalities are only allowed through cert login
+        res = make_response(jsonify({"authed": True, "isAdmin": False}), 200)
         res.set_cookie('token', token, secure=True, httponly=True)
 
         app.logger.info("User %s logged in", uid)
@@ -305,11 +303,11 @@ def generate_certificate(user, is_admin) -> Response:
     else:
         first_run = 0
     cmd = call(
-        f"/etc/ca/intermediate/new_cert.sh {ca.serial} {uid} {first_run}", shell=True)
+        f"/etc/ca/intermediate/new_cert.sh {ca.issued} {uid} {first_run}", shell=True)
     if cmd != 0:
         return make_response("err", 503)
     else:
-        with open(f"/etc/ca/intermediate/certificates/{ca.serial}_{uid}.p12", 'rb') as f:
+        with open(f"/etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12", 'rb') as f:
             raw = f.read()
             user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
                 raw, b'pass')
@@ -325,10 +323,12 @@ def generate_certificate(user, is_admin) -> Response:
             # update ca in db
             app.logger.info(
                 "User %s generated a certificate with serial %s", uid, ca.serial)
-            ca.serial += 1
+
+            ca.serial = user_certificate.serial_number
             ca.issued += 1
             query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-            cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
+            cursor.execute(
+                query, (user_certificate.serial_number, ca.issued, ca.revoked))
             imovies_db.commit()
             pkcs12_bytes = [x for x in bytearray(raw)]
 
@@ -427,7 +427,12 @@ def get_ca_status(user, is_admin):
         app.logger.info("User %s tried to access admin page", user[0])
         return make_response("Not an admin!", 403)
     else:
-        return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked})
+        query = "SELECT uid, serial, pem_encoding FROM imovies.certificates WHERE revoked=1;"
+        cursor.execute(query)
+
+        revoked_certs = cursor.fetchall()
+
+        return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked, "revoked_certs": revoked_certs})
 
 
 if __name__ == "__main__":

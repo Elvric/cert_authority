@@ -8,6 +8,7 @@ import Container from "react-bootstrap/Container";
 import Nav from "./Nav";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import Table from "react-bootstrap/Table";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -17,21 +18,29 @@ export default function Home() {
   const AuthContext = AuthConsumer();
   const isadmin = AuthContext.state.isAdmin;
   //const isadmin = true;
-  const [CAState, setCAState] = useState({ serial: 0, issued: 0, revoked: 0 });
+  const [CAState, setCAState] = useState({
+    serial: 0,
+    issued: 0,
+    revoked: 0,
+    revoked_certs: [],
+  });
 
-  useEffect(async function () {
-    try {
-      const res = await axios.get("/api/admin");
-      if (res.status == 200) {
-        setCAState({
-          serial: res.data.serial,
-          issued: res.data.issued,
-          revoked: res.data.revoked,
-        });
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get("/api/admin");
+        if (res.status === 200) {
+          setCAState({
+            serial: res.data.serial,
+            issued: res.data.issued,
+            revoked: res.data.revoked,
+            revoked_certs: [...res.data.revoked_certs],
+          });
+        }
+      } catch (err) {
+        window.alert("Error!");
       }
-    } catch (err) {
-      window.alert("Error!");
-    }
+    })();
   }, []);
 
   if (!isadmin) {
@@ -53,6 +62,43 @@ export default function Home() {
             <Col>Revoked: </Col>
             <Col>{CAState.revoked}</Col>
           </Row>
+        </Container>
+        <Container className="pt-2">
+          <h3>Revoked certificates</h3>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>uid</th>
+                <th>Serial</th>
+                <th>PEM Certificate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CAState.revoked_certs.map((cert) => (
+                <tr>
+                  <td>{cert[0]}</td>
+                  <td>{cert[1]}</td>
+                  <td
+                    style={{
+                      fontSize: 12,
+                      lineHeight: "initial",
+                      textAlign: "left",
+                    }}
+                  >
+                    {Buffer.from(cert[2], "base64")
+                      .toString()
+                      .split("\n")
+                      .map((x) => (
+                        <>
+                          {x}
+                          <br />
+                        </>
+                      ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         </Container>
       </div>
     );
