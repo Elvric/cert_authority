@@ -16,13 +16,28 @@ import jwt
 import datetime as dt
 import base64 as b64
 import pysftp
+import time
+import traceback
 
+# app setup
+app = Flask(__name__)
+# should be set up in the environment
+app.debug = False
+# used to sign jwt
+app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
+
+# logging stuff
 logging.basicConfig(
     filename='/var/log/flask/server_logs.log', level=logging.DEBUG)
 
+# SFTP config
 cnopts = pysftp.CnOpts()
-cnopts.hostkeys = None
+cnopts.hostkeys = None # check ssh backupserver key
+# creds 
+app.config["SFTP_USER"] = 'cabackup'
+app.config["SFTP_PWD"] = 'LZB33eeKa7rhz2PeDjNb'
 
+# mysql connection
 imovies_db = mysql.connector.connect(
     host="172.27.0.3",
     user="certmanager",
@@ -32,6 +47,8 @@ imovies_db = mysql.connector.connect(
     ssl_verify_cert=True,
 )
 cursor = imovies_db.cursor()
+"""
+# TB REMOVED...
 
 CA_CERTIFICATE = x509.load_pem_x509_certificate(
     open('/etc/nginx/ssl/cacert.pem', "rb").read())
@@ -40,7 +57,7 @@ INTM_CERTIFICATE = x509.load_pem_x509_certificate(
 INTM_PRIVATE_KEY = serialization.load_pem_private_key(
     open('/etc/nginx/ssl/intermediate.key', "rb").read(), password=None)
 INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
-
+"""
 
 class CA(object):
     """
@@ -64,17 +81,9 @@ class CA(object):
                 "INSERT INTO imovies.certificate_issuing_status (rid, serial, issued, revoked) VALUES (1,1,0,0);")
             imovies_db.commit()
 
-
 ca = CA()
-app = Flask(__name__)
 
-# TEMPORARY FOR TESTING, should be set up in the environment
-app.debug = False
-# used to sign jwt
-app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
-# creds for sftp
-app.config["SFTP_USER"] = 'sftp_manager'
-app.config["SFTP_PWD"] = 'sup3r_s3cr3t_sftp'
+
 
 #################################################
 #                                               #
@@ -242,7 +251,7 @@ def verify_user_authentication_cert():
 
 ##########################################
 #                                        #
-#             API ENDPOINTS              #
+#            SERVICE ENDPOINTS           #
 #                                        #
 ##########################################
 
@@ -284,17 +293,7 @@ def modify_user_info(user, is_admin):
 def generate_certificate(user, is_admin) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
     given Json Web Token (JWT), sign it with INTM_CA's private key."""
-    """
-    TO DO:
-        OK 1 - the certificate must be returned in PKCS12 format (bundle pvt_key + pem cert)
-        X 2 - as in OpenSSL, we should keep an internal storage here for certificates plus private keys issued
-        X 2b - send pkcs12 also to backup with SFTP?
-        OK 3 - define a new table in the database, called certificates. A table entry has the following entries:
-            a - serial (PRIMARY KEY): int (serial number of client cert, is unique)
-            b - uid (FOREIGN KEY): int (uid of the user to whom this cert belongs)
-            c - pem_encoding: str (b64encode of PEM encoding, use serialize_cert for this)
-            d - revoked: bool (true: is revoked, false: is active)
-    """
+    
     if user is None:
         return make_response("How are you even here?", 500)
     uid = user[0]
@@ -311,8 +310,18 @@ def generate_certificate(user, is_admin) -> Response:
             raw = f.read()
             user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
                 raw, b'pass')
+
+            #backup cert
+            with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
+                app.logger.debug("SFTP: ESTABLISHED")
+                try:
+                    res = sftp.put(f"/etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12",f"/backup/{ca.issued}_{uid}.p12", preserve_mtime=True)
+                    app.logger.debug("SFTP: OK")
+                except:
+                    app.logger.error(traceback.print_exc())
+                    make_response("Error in backing up, no cert issued", 505)
+            
             #store in db
-            #user_certificate = cert_pkcs12.cert.certificate
             pem_encoding = serialize_cert(user_certificate)
             query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
             val = (user_certificate.serial_number, uid,
@@ -324,15 +333,26 @@ def generate_certificate(user, is_admin) -> Response:
             app.logger.info(
                 "User %s generated a certificate with serial %s", uid, ca.serial)
 
-            ca.serial = user_certificate.serial_number
-            ca.issued += 1
             query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
             cursor.execute(
                 query, (user_certificate.serial_number, ca.issued, ca.revoked))
             imovies_db.commit()
             pkcs12_bytes = [x for x in bytearray(raw)]
-
-            return jsonify({'pkcs12': pkcs12_bytes})
+            f.close()
+        #try to rm the file, but might be used still by some process
+        cmd = 1
+        retry = 3
+        while cmd != 0 and retry > 0:
+            cmd = call(f"rm /etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12", shell=True)
+            app.logger.debug(f"Tried to remove pkcs12. Status = {cmd}")
+            if cmd != 0:
+                time.sleep(1.0)
+            retry -= 1
+        
+        ca.serial = user_certificate.serial_number
+        ca.issued += 1
+        
+        return jsonify({'pkcs12': pkcs12_bytes})
 
 
 @app.route("/api/get_certs", methods=["GET"])

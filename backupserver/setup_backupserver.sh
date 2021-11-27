@@ -15,10 +15,11 @@ for i in {0..1}; do
   useradd -g sftp_users -d /backup -s /sbin/nologin "${users[i]}"
   echo "${users[i]}":"${pass[i]}" | chpasswd
   mkdir -p "/data/${users[i]}/backup"
-  chmod o-rx "/data/${users[i]}/backup"
-  chmod o-rx "/data/${users[i]}"
+  chmod o-rwx "/data/${users[i]}/backup"
+  chmod o-rwx "/data/${users[i]}"
   chown -R root:sftp_users "/data/${users[i]}"
   chown -R "${users[i]}":admin "/data/${users[i]}/backup"
+  #chmod g+rwx "/data/${users[i]}/backup" #this is wrong
 done
 
 systemctl restart sshd
@@ -27,4 +28,5 @@ systemctl restart sshd
 apt update
 apt install rsyslog-gnutls -y
 cp ./backupserver/rsyslog.conf /etc/rsyslog.conf
+sudo chown -R syslog:admin ./backupserver/cert # this was needed
 systemctl restart rsyslog
