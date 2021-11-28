@@ -259,13 +259,21 @@ def generate_certificate(user, is_admin) -> Response:
     cursor.execute(query, (uid, ))
     entry = cursor.fetchone()
     email = entry[0]
-    query = "SELECT count(*) FROM imovies.certificates where uid=%s;"
-    cursor.execute(query, (uid,))
+    query = "SELECT Max(serial) FROM imovies.certificates;"
+    cursor.execute(query)
     entry = cursor.fetchone()
+    serial = '01'
     if entry[0] is not None:
-        cn_name = str(entry[0])
+        serial = entry[0] + 1
+        tmp = hex(serial)
+        tmp = tmp[2:]
+        tmp = tmp.upper()
+        if serial < 16:
+            serial = '0' + tmp
+        else:
+            serial = tmp
     cmd = call(
-        f"/etc/ca/intermediate/new_cert.sh {uid} {cn_name} {email}", shell=True)
+        f"/etc/ca/intermediate/new_cert.sh {uid} {serial} {email}", shell=True)
     if cmd != 0:
         return make_response("err", 503)
     else:
