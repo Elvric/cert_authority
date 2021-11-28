@@ -16,6 +16,7 @@ Vagrant.configure("2") do |config|
     bk.vm.box = OS
     bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
     bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
+    bk.vm.provision "file", source: "./backupserver/usrs_pub_keys/db_pub_key.pub", destination: "db_pub_key.pub"
     bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
     bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"
     bk.vm.provision "shell", path: "./backupserver/routing_vagrant.sh", run: "always"
@@ -37,6 +38,7 @@ Vagrant.configure("2") do |config|
     db.vm.provision "file", source: "./database/cert", destination: "cert"
     db.vm.provision "file", source: "./database/my.cnf", destination: "my.cnf"
     db.vm.provision "file", source: "./database/rsyslog.conf", destination: "rsyslog.conf"
+    db.vm.provision "file", source: "./database/ssh_keys/db_priv_key", destination: "db_priv_key"
     db.vm.provision "shell", path: "./database/setup_database.sh"
     db.vm.network "private_network", ip: "172.27.0.3", virtualbox__intnet: "internal_net"
     db.vm.provision "shell", path: "./database/routing_vagrant.sh", run: "always"
