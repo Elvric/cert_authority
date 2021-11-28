@@ -14,3 +14,4 @@ openssl ca -config /etc/ca/intermediate/intermediate.cnf -extensions usr_cert -d
 openssl pkcs12 -export -in /etc/ca/intermediate/certificates/client.pem -inkey /etc/ca/intermediate/certificates/client.key -out /etc/ca/intermediate/certificates/tmp_cert.p12 -password pass:pass
 rm /etc/ca/intermediate/certificates/client.key
 rm /etc/ca/intermediate/certificates/client.pem
+rm /etc/ca/intermediate/certificates/client.csr

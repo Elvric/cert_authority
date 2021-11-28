@@ -1,7 +1,8 @@
+import os
 from functools import wraps
 from cryptography import x509
 import cryptography
-from cryptography.hazmat.primitives.serialization import Encoding, pkcs12, NoEncryption, BestAvailableEncryption
+from cryptography.hazmat.primitives.serialization import Encoding, pkcs12
 from subprocess import call
 from flask import Flask, request, jsonify, Response
 import logging
@@ -12,7 +13,6 @@ import jwt
 import datetime as dt
 import base64 as b64
 import pysftp
-import time
 
 # app setup
 app = Flask(__name__)
@@ -272,8 +272,7 @@ def generate_certificate(user, is_admin) -> Response:
             serial = '0' + tmp
         else:
             serial = tmp
-    cmd = call(
-        f"/etc/ca/intermediate/new_cert.sh {uid} {serial} {email}", shell=True)
+    cmd = call(["/etc/ca/intermediate/new_cert.sh", uid, serial, email], shell=False)
     if cmd != 0:
         return make_response("err", 503)
     else:
@@ -305,16 +304,8 @@ def generate_certificate(user, is_admin) -> Response:
                 "User %s generated a certificate with serial %s", uid, user_certificate.serial_number)
             pkcs12_bytes = [x for x in bytearray(raw)]
             f.close()
-        #try to rm the file, but might be used still by some process
-        cmd = 1
-        retry = 3
-        while cmd != 0 and retry > 0:
-            cmd = call(f"rm /etc/ca/intermediate/certificates/tmp_cert.p12", shell=True)
-            app.logger.debug(f"Tried to remove pkcs12. Status = {cmd}")
-            if cmd != 0:
-                time.sleep(1.0)
-            retry -= 1
-        
+            os.remove("/etc/ca/intermediate/certificates/tmp_cert.p12")
+
 
         return jsonify({'pkcs12': pkcs12_bytes})
 
@@ -372,11 +363,6 @@ def revoke_all_certs(user, is_admin):
         return make_response("How are you even here?", 500)
     else:
         try:
-            query = "SELECT COUNT(*) FROM imovies.certificates WHERE uid = %s AND revoked = 0;"
-            cursor.execute(query, (user[0], ))
-
-            num_certs = cursor.fetchone()
-
             query = "UPDATE imovies.certificates SET revoked = 1 WHERE uid = %s;"
             cursor.execute(
                 query, (user[0],))
