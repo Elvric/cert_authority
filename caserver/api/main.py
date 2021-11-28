@@ -1,11 +1,7 @@
-import datetime
 from functools import wraps
 from cryptography import x509
 import cryptography
-from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import Encoding, pkcs12, NoEncryption, BestAvailableEncryption
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.x509.oid import NameOID
 from subprocess import call
 from flask import Flask, request, jsonify, Response
 import logging
@@ -17,7 +13,6 @@ import datetime as dt
 import base64 as b64
 import pysftp
 import time
-import traceback
 
 # app setup
 app = Flask(__name__)
@@ -47,43 +42,6 @@ imovies_db = mysql.connector.connect(
     ssl_verify_cert=True,
 )
 cursor = imovies_db.cursor()
-"""
-# TB REMOVED...
-
-CA_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/cacert.pem', "rb").read())
-INTM_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/intermediate.pem', "rb").read())
-INTM_PRIVATE_KEY = serialization.load_pem_private_key(
-    open('/etc/nginx/ssl/intermediate.key', "rb").read(), password=None)
-INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
-"""
-
-class CA(object):
-    """
-        Keeps the state of the CA fetching from db if found or creating the state if first time
-        Useful for the admin panel
-    """
-
-    def __init__(self):
-        try:
-            cursor.execute("SELECT * FROM imovies.certificate_issuing_status;")
-            data = cursor.fetchone()[1:]
-            self.serial = data[0]
-            self.issued = data[1]
-            self.revoked = data[2]
-        except:
-            # first time
-            self.serial = 1
-            self.issued = 0
-            self.revoked = 0
-            cursor.execute(
-                "INSERT INTO imovies.certificate_issuing_status (rid, serial, issued, revoked) VALUES (1,1,0,0);")
-            imovies_db.commit()
-
-ca = CA()
-
-
 
 #################################################
 #                                               #
@@ -297,30 +255,35 @@ def generate_certificate(user, is_admin) -> Response:
     if user is None:
         return make_response("How are you even here?", 500)
     uid = user[0]
-    if ca.issued == 0:
-        first_run = 1
-    else:
-        first_run = 0
+    query = "SELECT email FROM imovies.users where uid=%s;"
+    cursor.execute(query, (uid, ))
+    entry = cursor.fetchone()
+    email = entry[0]
+    query = "SELECT count(*) FROM imovies.certificates where uid=%s;"
+    cursor.execute(query, (uid,))
+    entry = cursor.fetchone()
+    if entry[0] is not None:
+        cn_name = str(entry[0])
     cmd = call(
-        f"/etc/ca/intermediate/new_cert.sh {ca.issued} {uid} {first_run}", shell=True)
+        f"/etc/ca/intermediate/new_cert.sh {uid} {cn_name} {email}", shell=True)
     if cmd != 0:
         return make_response("err", 503)
     else:
-        with open(f"/etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12", 'rb') as f:
+        with open(f"/etc/ca/intermediate/certificates/tmp_cert.p12", 'rb') as f:
             raw = f.read()
             user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
                 raw, b'pass')
 
             #backup cert
-            with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
-                app.logger.debug("SFTP: ESTABLISHED")
-                try:
-                    res = sftp.put(f"/etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12",f"/backup/{ca.issued}_{uid}.p12", preserve_mtime=True)
-                    app.logger.debug("SFTP: OK")
-                except:
-                    app.logger.error(traceback.print_exc())
-                    make_response("Error in backing up, no cert issued", 505)
-            
+            # with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
+            #     app.logger.debug("SFTP: ESTABLISHED")
+            #     try:
+            #         res = sftp.put(f"/etc/ca/intermediate/certificates/{serial}_{uid}.p12",f"/backup/{serial}_{uid}.p12", preserve_mtime=True)
+            #         app.logger.debug("SFTP: OK")
+            #     except:
+            #         app.logger.error(traceback.print_exc())
+            #         make_response("Error in backing up, no cert issued", 505)
+            #
             #store in db
             pem_encoding = serialize_cert(user_certificate)
             query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
@@ -331,27 +294,20 @@ def generate_certificate(user, is_admin) -> Response:
 
             # update ca in db
             app.logger.info(
-                "User %s generated a certificate with serial %s", uid, ca.serial)
-
-            query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-            cursor.execute(
-                query, (user_certificate.serial_number, ca.issued, ca.revoked))
-            imovies_db.commit()
+                "User %s generated a certificate with serial %s", uid, user_certificate.serial_number)
             pkcs12_bytes = [x for x in bytearray(raw)]
             f.close()
         #try to rm the file, but might be used still by some process
         cmd = 1
         retry = 3
         while cmd != 0 and retry > 0:
-            cmd = call(f"rm /etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12", shell=True)
+            cmd = call(f"rm /etc/ca/intermediate/certificates/tmp_cert.p12", shell=True)
             app.logger.debug(f"Tried to remove pkcs12. Status = {cmd}")
             if cmd != 0:
                 time.sleep(1.0)
             retry -= 1
         
-        ca.serial = user_certificate.serial_number
-        ca.issued += 1
-        
+
         return jsonify({'pkcs12': pkcs12_bytes})
 
 
@@ -393,11 +349,6 @@ def revoke_cert(user, is_admin):
                 cursor.execute(
                     query, (serial, user[0], ))
                 imovies_db.commit()
-                ca.revoked += 1
-                query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-                cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
-                imovies_db.commit()
-
                 app.logger.info(
                     "User %s revoked certificate with serial %s", uid[0], serial)
 
@@ -423,11 +374,6 @@ def revoke_all_certs(user, is_admin):
                 query, (user[0],))
             imovies_db.commit()
 
-            ca.revoked += num_certs[0]
-
-            query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-            cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
-
             app.logger.info(
                 "User %s revoked all certificates", user[0])
 
@@ -447,12 +393,25 @@ def get_ca_status(user, is_admin):
         app.logger.info("User %s tried to access admin page", user[0])
         return make_response("Not an admin!", 403)
     else:
+        query = "SELECT max(serial) FROM imovies.certificates;"
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        serial = 0
+        if entry[0] is not None:
+            serial = entry[0]
+        query = "SELECT count(*) FROM imovies.certificates"
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        issued = entry[0]
+        query = "SELECT count(*) FROM imovies.certificates where revoked = 1"
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        revoked = entry[0]
         query = "SELECT uid, serial, pem_encoding FROM imovies.certificates WHERE revoked=1;"
         cursor.execute(query)
-
         revoked_certs = cursor.fetchall()
 
-        return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked, "revoked_certs": revoked_certs})
+        return jsonify({"serial": int(serial, 16), "issued": issued, "revoked": revoked, "revoked_certs": revoked_certs})
 
 
 if __name__ == "__main__":
