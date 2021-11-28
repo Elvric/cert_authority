@@ -2,11 +2,12 @@
 cat <<EOF >> /etc/ssh/sshd_config
 Match Group sftp_users
   ChrootDirectory /data/%u
-  ForceCommand internal-sftp -u 0227 -P remove,rmdir
+  ForceCommand internal-sftp -u 0277 -P remove,rmdir
 EOF
 mkdir -p /data
 chmod 701 /data
 groupadd sftp_users
+groupadd admin
 users=(dbackup cabackup)
 # TODO remove if loging with certs
 pass=(bC8LcLh2WuHtJKE7r4D2 LZB33eeKa7rhz2PeDjNb)
