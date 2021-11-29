@@ -186,8 +186,9 @@ def verify_user_authentication_cert():
     Return true if verification is successful, false otherwise."""
 
     serial = request.headers["X-Custom-Referrer"]
+    serial = int(serial, 16)
     app.logger.debug(request.headers)
-    app.logger.debug("SERIAL: " + serial)
+    app.logger.debug("SERIAL: " + str(serial))
     if serial is None:
         make_response("Header missing", 505)
     # to do, check that the certificate is actually stored
