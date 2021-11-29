@@ -1,6 +1,9 @@
 import os
 from functools import wraps
 from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.serialization import Encoding, pkcs12
 from subprocess import call
 from flask import Flask, request, jsonify, Response
@@ -13,6 +16,7 @@ import datetime as dt
 import base64 as b64
 import pysftp
 import re
+from io import BytesIO
 # app setup
 app = Flask(__name__)
 # should be set up in the environment
@@ -42,7 +46,11 @@ imovies_db = mysql.connector.connect(
 )
 cursor = imovies_db.cursor()
 
-
+f = open("backup.pem", "rb")
+public_key = serialization.load_pem_public_key(
+    f.read(),
+    backend=default_backend())
+f.close()
 #################################################
 #                                               #
 #                   HELPERS                     #
@@ -303,17 +311,10 @@ def generate_certificate(user, is_admin) -> Response:
         os.remove("/etc/ca/intermediate/certificates/tmp_cert.p12")
         user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
             raw, b'pass')
-
+        encrypted = encryptData(user_key)
         # backup cert
-        # with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
-        #     app.logger.debug("SFTP: ESTABLISHED")
-        #     try:
-        #         res = sftp.put(f"/etc/ca/intermediate/certificates/{serial}_{uid}.p12",f"/backup/{serial}_{uid}.p12", preserve_mtime=True)
-        #         app.logger.debug("SFTP: OK")
-        #     except:
-        #         app.logger.error(traceback.print_exc())
-        #         make_response("Error in backing up, no cert issued", 505)
-        #
+        with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
+            res = sftp.putfo(BytesIO(encrypted), f"/backup/{serial}_{uid}.enc")
         # store in db
         pem_encoding = serialize_cert(user_certificate)
         query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
@@ -329,6 +330,21 @@ def generate_certificate(user, is_admin) -> Response:
 
         return jsonify({'pkcs12': pkcs12_bytes})
 
+def encryptData(user_key):
+    user_key = user_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.BestAvailableEncryption(b'pass')
+    )
+    encrypted = public_key.encrypt(
+        user_key,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return encrypted
 
 @app.route("/api/get_certs", methods=["GET"])
 @token_required
