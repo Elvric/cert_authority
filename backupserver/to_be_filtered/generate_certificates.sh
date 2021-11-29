@@ -151,6 +151,8 @@ rm backup.csr
 mv backup.pem ../../backupserver/cert
 cp ./CA/cacert.pem ../../backupserver/cert
 
+cp -r ./CA ../
+
 rm out
 rm ./CA/index.txt.attr
 rm ./CA/index.txt.attr.old
