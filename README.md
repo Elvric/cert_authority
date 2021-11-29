@@ -36,6 +36,8 @@ All the setup is in the `Vagrantfile`
 
 ### Database
 Seem to work fine, no problem there
+backup encryption passphrase:
+26qdJ6ZJsPz9QKOCm86P
 
 ### CaServer
 Seem to work fine, no problem there

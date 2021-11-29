@@ -1,7 +1,6 @@
 import os
 from functools import wraps
 from cryptography import x509
-import cryptography
 from cryptography.hazmat.primitives.serialization import Encoding, pkcs12
 from subprocess import call
 from flask import Flask, request, jsonify, Response
