@@ -12,7 +12,7 @@ import jwt
 import datetime as dt
 import base64 as b64
 import pysftp
-
+import re
 # app setup
 app = Flask(__name__)
 # should be set up in the environment
@@ -27,7 +27,7 @@ logging.basicConfig(
 # SFTP config
 cnopts = pysftp.CnOpts()
 cnopts.hostkeys = None  # check ssh backupserver key
-# creds 
+# creds
 app.config["SFTP_USER"] = 'cabackup'
 app.config["SFTP_PWD"] = 'LZB33eeKa7rhz2PeDjNb'
 
@@ -162,7 +162,8 @@ def verify_user_authentication():
 
     if cursor.fetchone() is not None:  # checks if the user is in the database, if yes generate jwt
         token = jwt.encode(
-            {'uid': uid, 'isAdmin': False, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)},
+            {'uid': uid, 'isAdmin': False, 'exp': dt.datetime.utcnow() +
+             dt.timedelta(hours=24)},
             app.config['SECRET_KEY'], "HS256")
 
         # isAdmin always false here because admin functionalities are only allowed through cert login
@@ -200,7 +201,8 @@ def verify_user_authentication_cert():
         cursor.execute(query, (uid,))
         isadmin = cursor.fetchone()[0]
         token = jwt.encode(
-            {'uid': uid, 'isAdmin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)},
+            {'uid': uid, 'isAdmin': isadmin, 'exp': dt.datetime.utcnow() +
+             dt.timedelta(hours=24)},
             app.config['SECRET_KEY'], "HS256")
 
         res = make_response(jsonify({"authed": True, "isAdmin": isadmin}), 200)
@@ -241,15 +243,25 @@ def modify_user_info(user, is_admin):
         return make_response("What the fuck!?", 500)
     else:
         if updated["password"] != "****":
+            if len(updated["password"]) < 6:
+                return make_response("Password not long enough", 400)
+
             query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s,pwd=%s WHERE uid=%s;"
             hashed_checksum = hashlib.sha1(
                 updated["password"].encode()).hexdigest()
             cursor.execute(query, (updated["lastName"], updated["firstName"],
                                    updated["email"], hashed_checksum, updated["uid"]))
         else:
+            for key in updated:
+                if len(updated[key]) < 1:
+                    return make_response("Fields can't be empty", 400)
+
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", updated["email"]):
+                return make_response("Invalid email", 400)
+
             query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s WHERE uid=%s;"
             cursor.execute(
-                query, (updated["lastName"], updated["firstName"], updated["email"], updated["uid"]))
+                query, (updated["lastName"], updated["firstName"], updated["email"], user[0]))
         imovies_db.commit()
         return make_response("Updated!", 200)
 
@@ -280,7 +292,8 @@ def generate_certificate(user, is_admin) -> Response:
             serial = '0' + tmp
         else:
             serial = tmp
-    cmd = call(["/etc/ca/intermediate/new_cert.sh", uid, serial, email], shell=False)
+    cmd = call(["/etc/ca/intermediate/new_cert.sh",
+               uid, serial, email], shell=False)
     if cmd != 0:
         return make_response("err", 503)
     else:
