@@ -43,5 +43,4 @@ cp pvt_key.pem cakey.pem
 mv cakey.pem ./CA/private/
 mv cacert.pem ./CA
 
-cp -r ./CA ../
 rm out
