@@ -41,6 +41,7 @@ Vagrant.configure("2") do |config|
     db.vm.provision "file", source: "./database/ssh_keys/db_priv_key", destination: "db_priv_key"
     db.vm.provision "shell", path: "./database/setup_database.sh"
     db.vm.network "private_network", ip: "172.27.0.3", virtualbox__intnet: "internal_net"
+    db.vm.network "forwarded_port", guest: 3306, host: 3306
     db.vm.provision "shell", path: "./database/routing_vagrant.sh", run: "always"
   end
 
@@ -48,7 +49,6 @@ Vagrant.configure("2") do |config|
     caserver.vm.box = OS
     caserver.vm.network "private_network", ip: "172.27.0.2", virtualbox__intnet: "internal_net"
     caserver.vm.provision "file", source: "./caserver/nginx", destination: "caserver/nginx"
-    caserver.vm.provision "file", source: "./caserver/api/intermediate", destination: "caserver/api/intermediate"
     caserver.vm.provision "file", source: "./caserver/log", destination: "caserver/log"
     caserver.vm.provision "file", source: "./caserver/cert", destination: "caserver/cert"
     caserver.vm.provision "file", source: "./caserver/api", destination: "caserver/api"

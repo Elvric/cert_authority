@@ -6,7 +6,7 @@ CREATE TABLE isadmin (
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE certificates (
-    serial varchar(16),
+    serial INTEGER ,
     uid varchar(64),
     pem_encoding varchar(32768) not null,
     revoked bool not null default 0,
@@ -14,32 +14,20 @@ CREATE TABLE certificates (
     PRIMARY KEY (serial))
     ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-CREATE TABLE certificate_issuing_status
-(
-    rid int,
-    serial varchar(16),
-    issued int,
-    revoked int,
-    PRIMARY KEY (rid))
-    ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
--- TODO remove that user
-create user test@'%' identified by 'SniaVj5YQnKSXXVu';
-grant all privileges on *.* to test@'%' with grant option;
-
 create user certmanager@172.27.0.2 identified by 'SniaVj5YQnKSXXVu';
+create user dbackup@localhost identified by 'HpDMDF2dQexqGZQcag8D';
 grant insert on imovies.users to certmanager@172.27.0.2;
-grant insert on imovies.certificate_issuing_status to certmanager@172.27.0.2;
 grant insert on imovies.isadmin to certmanager@172.27.0.2;
 grant insert on imovies.certificates to certmanager@172.27.0.2;
 grant update on imovies.users to certmanager@172.27.0.2;
 grant update on imovies.isadmin to certmanager@172.27.0.2;
 grant update on imovies.certificates to certmanager@172.27.0.2;
-grant update on imovies.certificate_issuing_status to certmanager@172.27.0.2;
 grant select on imovies.users to certmanager@172.27.0.2;
 grant select on imovies.isadmin to certmanager@172.27.0.2;
 grant select on imovies.certificates to certmanager@172.27.0.2;
-grant select on imovies.certificate_issuing_status to certmanager@172.27.0.2;
+grant select on imovies.users to dbackup@localhost;
+grant select on imovies.isadmin to dbackup@localhost;
+grant select on imovies.certificates to dbackup@localhost;
 flush privileges;
 
 insert into isadmin select uid,0 from users;

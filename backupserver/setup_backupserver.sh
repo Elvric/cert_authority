@@ -20,7 +20,6 @@ for i in {0..1}; do
   chmod o-rwx "/data/${users[i]}"
   chown -R root:sftp_users "/data/${users[i]}"
   chown -R "${users[i]}":admin "/data/${users[i]}/backup"
-  #chmod g+rwx "/data/${users[i]}/backup" #this is wrong
 done
 
 # link SSH public keys to users

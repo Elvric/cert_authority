@@ -1,11 +1,8 @@
-import datetime
+import os
 from functools import wraps
 from cryptography import x509
 import cryptography
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.serialization import Encoding, pkcs12, NoEncryption, BestAvailableEncryption
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives.serialization import Encoding, pkcs12
 from subprocess import call
 from flask import Flask, request, jsonify, Response
 import logging
@@ -16,8 +13,6 @@ import jwt
 import datetime as dt
 import base64 as b64
 import pysftp
-import time
-import traceback
 
 # app setup
 app = Flask(__name__)
@@ -32,7 +27,7 @@ logging.basicConfig(
 
 # SFTP config
 cnopts = pysftp.CnOpts()
-cnopts.hostkeys = None # check ssh backupserver key
+cnopts.hostkeys = None  # check ssh backupserver key
 # creds 
 app.config["SFTP_USER"] = 'cabackup'
 app.config["SFTP_PWD"] = 'LZB33eeKa7rhz2PeDjNb'
@@ -47,42 +42,6 @@ imovies_db = mysql.connector.connect(
     ssl_verify_cert=True,
 )
 cursor = imovies_db.cursor()
-"""
-# TB REMOVED...
-
-CA_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/cacert.pem', "rb").read())
-INTM_CERTIFICATE = x509.load_pem_x509_certificate(
-    open('/etc/nginx/ssl/intermediate.pem', "rb").read())
-INTM_PRIVATE_KEY = serialization.load_pem_private_key(
-    open('/etc/nginx/ssl/intermediate.key', "rb").read(), password=None)
-INTM_PUB_KEY = INTM_CERTIFICATE.public_key()
-"""
-
-class CA(object):
-    """
-        Keeps the state of the CA fetching from db if found or creating the state if first time
-        Useful for the admin panel
-    """
-
-    def __init__(self):
-        try:
-            cursor.execute("SELECT * FROM imovies.certificate_issuing_status;")
-            data = cursor.fetchone()[1:]
-            self.serial = data[0]
-            self.issued = data[1]
-            self.revoked = data[2]
-        except:
-            # first time
-            self.serial = 1
-            self.issued = 0
-            self.revoked = 0
-            cursor.execute(
-                "INSERT INTO imovies.certificate_issuing_status (rid, serial, issued, revoked) VALUES (1,1,0,0);")
-            imovies_db.commit()
-
-ca = CA()
-
 
 
 #################################################
@@ -111,6 +70,7 @@ def deserialize_cert(pem) -> x509.Certificate:
     cert = b64.b64decode(pem.encode())
     return x509.load_pem_x509_certificate(cert)
 
+
 #################################################
 #                                               #
 #                   APP LOGIC                   #
@@ -121,6 +81,7 @@ def deserialize_cert(pem) -> x509.Certificate:
 def token_required(f):
     """Decorator to check if the request contains a valid JWT.
     Used for routes needing authentication."""
+
     @wraps(f)
     def decorator(*args, **kwargs):
         token = None
@@ -152,6 +113,7 @@ def token_required(f):
         return f(current_user, is_admin, *args, **kwargs)
 
     return decorator
+
 
 ##########################################
 #                                        #
@@ -199,9 +161,10 @@ def verify_user_authentication():
     query = "SELECT * FROM imovies.users WHERE uid = %s AND pwd = %s;"
     cursor.execute(query, (uid, hashed_checksum))
 
-    if cursor.fetchone() != None:  # checks if the user is in the database, if yes generate jwt
+    if cursor.fetchone() is not None:  # checks if the user is in the database, if yes generate jwt
         token = jwt.encode(
-            {'uid': uid, 'isAdmin': False, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
+            {'uid': uid, 'isAdmin': False, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)},
+            app.config['SECRET_KEY'], "HS256")
 
         # isAdmin always false here because admin functionalities are only allowed through cert login
         res = make_response(jsonify({"authed": True, "isAdmin": False}), 200)
@@ -223,9 +186,10 @@ def verify_user_authentication_cert():
     Return true if verification is successful, false otherwise."""
 
     serial = request.headers["X-Custom-Referrer"]
+    serial = int(serial, 16)
     app.logger.debug(request.headers)
-    app.logger.debug("SERIAL: "+serial)
-    if serial == None:
+    app.logger.debug("SERIAL: " + str(serial))
+    if serial is None:
         make_response("Header missing", 505)
     # to do, check that the certificate is actually stored
     query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
@@ -237,7 +201,8 @@ def verify_user_authentication_cert():
         cursor.execute(query, (uid,))
         isadmin = cursor.fetchone()[0]
         token = jwt.encode(
-            {'uid': uid, 'isAdmin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)}, app.config['SECRET_KEY'], "HS256")
+            {'uid': uid, 'isAdmin': isadmin, 'exp': dt.datetime.utcnow() + dt.timedelta(hours=24)},
+            app.config['SECRET_KEY'], "HS256")
 
         res = make_response(jsonify({"authed": True, "isAdmin": isadmin}), 200)
         res.set_cookie('token', token, secure=True, httponly=True)
@@ -248,6 +213,7 @@ def verify_user_authentication_cert():
 
     else:
         return make_response("Wrong credentials", 403)
+
 
 ##########################################
 #                                        #
@@ -262,7 +228,8 @@ def get_user_info(user, is_admin):  # TODO: jwt type?
     if user == None:
         return make_response("How are you even here?", 500)
     else:
-        return jsonify({"userID": user[0], "password": "****", "firstname": user[2], "lastname": user[1], "email": user[3]})
+        return jsonify(
+            {"userID": user[0], "password": "****", "firstname": user[2], "lastname": user[1], "email": user[3]})
 
 
 @app.route("/api/modify", methods=["POST"])
@@ -279,7 +246,7 @@ def modify_user_info(user, is_admin):
             hashed_checksum = hashlib.sha1(
                 updated["password"].encode()).hexdigest()
             cursor.execute(query, (updated["lastName"], updated["firstName"],
-                           updated["email"], hashed_checksum, updated["uid"]))
+                                   updated["email"], hashed_checksum, updated["uid"]))
         else:
             query = "UPDATE imovies.users SET lastname=%s,firstname=%s,email=%s WHERE uid=%s;"
             cursor.execute(
@@ -293,65 +260,61 @@ def modify_user_info(user, is_admin):
 def generate_certificate(user, is_admin) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
     given Json Web Token (JWT), sign it with INTM_CA's private key."""
-    
+
     if user is None:
         return make_response("How are you even here?", 500)
     uid = user[0]
-    if ca.issued == 0:
-        first_run = 1
-    else:
-        first_run = 0
-    cmd = call(
-        f"/etc/ca/intermediate/new_cert.sh {ca.issued} {uid} {first_run}", shell=True)
+    query = "SELECT email FROM imovies.users where uid=%s;"
+    cursor.execute(query, (uid,))
+    entry = cursor.fetchone()
+    email = entry[0]
+    query = "SELECT Max(serial) FROM imovies.certificates;"
+    cursor.execute(query)
+    entry = cursor.fetchone()
+    serial = '01'
+    if entry[0] is not None:
+        serial = entry[0] + 1
+        tmp = hex(serial)
+        tmp = tmp[2:]
+        tmp = tmp.upper()
+        if serial < 16:
+            serial = '0' + tmp
+        else:
+            serial = tmp
+    cmd = call(["/etc/ca/intermediate/new_cert.sh", uid, serial, email], shell=False)
     if cmd != 0:
         return make_response("err", 503)
     else:
-        with open(f"/etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12", 'rb') as f:
-            raw = f.read()
-            user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
-                raw, b'pass')
+        f = open(f"/etc/ca/intermediate/certificates/tmp_cert.p12", 'rb')
+        raw = f.read()
+        f.close()
+        os.remove("/etc/ca/intermediate/certificates/tmp_cert.p12")
+        user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
+            raw, b'pass')
 
-            #backup cert
-            with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
-                app.logger.debug("SFTP: ESTABLISHED")
-                try:
-                    res = sftp.put(f"/etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12",f"/backup/{ca.issued}_{uid}.p12", preserve_mtime=True)
-                    app.logger.debug("SFTP: OK")
-                except:
-                    app.logger.error(traceback.print_exc())
-                    make_response("Error in backing up, no cert issued", 505)
-            
-            #store in db
-            pem_encoding = serialize_cert(user_certificate)
-            query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
-            val = (user_certificate.serial_number, uid,
-                   pem_encoding, int(False))
-            cursor.execute(query, val)
-            imovies_db.commit()
+        # backup cert
+        # with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
+        #     app.logger.debug("SFTP: ESTABLISHED")
+        #     try:
+        #         res = sftp.put(f"/etc/ca/intermediate/certificates/{serial}_{uid}.p12",f"/backup/{serial}_{uid}.p12", preserve_mtime=True)
+        #         app.logger.debug("SFTP: OK")
+        #     except:
+        #         app.logger.error(traceback.print_exc())
+        #         make_response("Error in backing up, no cert issued", 505)
+        #
+        # store in db
+        pem_encoding = serialize_cert(user_certificate)
+        query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
+        val = (user_certificate.serial_number, uid,
+               pem_encoding, int(False))
+        cursor.execute(query, val)
+        imovies_db.commit()
 
-            # update ca in db
-            app.logger.info(
-                "User %s generated a certificate with serial %s", uid, ca.serial)
+        # update ca in db
+        app.logger.info(
+            "User %s generated a certificate with serial %s", uid, user_certificate.serial_number)
+        pkcs12_bytes = [x for x in bytearray(raw)]
 
-            query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-            cursor.execute(
-                query, (user_certificate.serial_number, ca.issued, ca.revoked))
-            imovies_db.commit()
-            pkcs12_bytes = [x for x in bytearray(raw)]
-            f.close()
-        #try to rm the file, but might be used still by some process
-        cmd = 1
-        retry = 3
-        while cmd != 0 and retry > 0:
-            cmd = call(f"rm /etc/ca/intermediate/certificates/{ca.issued}_{uid}.p12", shell=True)
-            app.logger.debug(f"Tried to remove pkcs12. Status = {cmd}")
-            if cmd != 0:
-                time.sleep(1.0)
-            retry -= 1
-        
-        ca.serial = user_certificate.serial_number
-        ca.issued += 1
-        
         return jsonify({'pkcs12': pkcs12_bytes})
 
 
@@ -363,7 +326,7 @@ def get_all_certs(user, is_admin):
         return make_response("How are you even here?", 500)
 
     query = "SELECT serial, revoked FROM imovies.certificates WHERE uid=%s ;"
-    cursor.execute(query, (user[0], ))
+    cursor.execute(query, (user[0],))
     certs = cursor.fetchall()
     return jsonify(certs)
 
@@ -377,82 +340,70 @@ def revoke_cert(user, is_admin):
         # load pkcs12 format
         body = request.get_json()
         serial = body["serial"]
-        uid = user[0]
+        query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
+        cursor.execute(query, (serial,))
 
-        certificate = None
-        try:
-            # to do, check that the certificate is actually stored
-            query = "SELECT uid FROM imovies.certificates WHERE serial = %s AND revoked = 0;"
-            cursor.execute(query, (serial, ))
+        uid = cursor.fetchone()
+        if uid is None:
+            return make_response("I don't recognize this certificate dude!", 500)
+        else:
+            query = "UPDATE imovies.certificates SET revoked = 1 WHERE serial = %s AND uid = %s;"
+            cursor.execute(
+                query, (serial, user[0],))
+            imovies_db.commit()
+            app.logger.info(
+                "User %s revoked certificate with serial %s", uid[0], serial)
 
-            uid = cursor.fetchone()
-            if uid == None:
-                return make_response("I don't recognize this certificate dude!", 500)
-            else:
-                query = "UPDATE imovies.certificates SET revoked = 1 WHERE serial = %s AND uid = %s;"
-                cursor.execute(
-                    query, (serial, user[0], ))
-                imovies_db.commit()
-                ca.revoked += 1
-                query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-                cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
-                imovies_db.commit()
-
-                app.logger.info(
-                    "User %s revoked certificate with serial %s", uid[0], serial)
-
-                return make_response("Hasta la vista certificate!", 200)
-        except cryptography.exceptions.InvalidSignature:
-            return make_response("Invalid Certificate", 500)
+            return make_response("Hasta la vista certificate!", 200)
 
 
 @app.route("/api/revoke_all", methods=['POST'])
 @token_required
 def revoke_all_certs(user, is_admin):
-    if user == None:
+    if user is None:
         return make_response("How are you even here?", 500)
     else:
-        try:
-            query = "SELECT COUNT(*) FROM imovies.certificates WHERE uid = %s AND revoked = 0;"
-            cursor.execute(query, (user[0], ))
+        query = "UPDATE imovies.certificates SET revoked = 1 WHERE uid = %s;"
+        cursor.execute(
+            query, (user[0],))
+        imovies_db.commit()
+        app.logger.info(
+            "User %s revoked all certificates", user[0])
 
-            num_certs = cursor.fetchone()
-
-            query = "UPDATE imovies.certificates SET revoked = 1 WHERE uid = %s;"
-            cursor.execute(
-                query, (user[0],))
-            imovies_db.commit()
-
-            ca.revoked += num_certs[0]
-
-            query = "UPDATE imovies.certificate_issuing_status SET rid = 1, serial=%s, issued=%s, revoked=%s WHERE rid=1;"
-            cursor.execute(query, (ca.serial, ca.issued, ca.revoked))
-
-            app.logger.info(
-                "User %s revoked all certificates", user[0])
-
-            imovies_db.commit()
-            return make_response("Hasta la vista certificate!", 200)
-        except cryptography.exceptions.InvalidSignature:
-            return make_response("Invalid Certificate", 500)
+        imovies_db.commit()
+        return make_response("Hasta la vista certificate!", 200)
 
 
 @app.route("/api/admin", methods=["GET"])
 @token_required
 def get_ca_status(user, is_admin):
-    if user == None:
+    if user is None:
         return make_response("WTF?", 500)
 
     if not is_admin:
         app.logger.info("User %s tried to access admin page", user[0])
         return make_response("Not an admin!", 403)
     else:
+        query = "SELECT max(serial) FROM imovies.certificates;"
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        serial = 0
+        if entry[0] is not None:
+            serial = entry[0]
+        query = "SELECT count(*) FROM imovies.certificates"
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        issued = entry[0]
+        query = "SELECT count(*) FROM imovies.certificates where revoked = 1"
+        cursor.execute(query)
+        entry = cursor.fetchone()
+        revoked = entry[0]
         query = "SELECT uid, serial, pem_encoding FROM imovies.certificates WHERE revoked=1;"
         cursor.execute(query)
-
         revoked_certs = cursor.fetchall()
 
-        return jsonify({"serial": ca.serial, "issued": ca.issued, "revoked": ca.revoked, "revoked_certs": revoked_certs})
+        return jsonify(
+            {"serial": int(serial, 16), "issued": issued, "revoked": revoked, "revoked_certs": revoked_certs})
 
 
 if __name__ == "__main__":
