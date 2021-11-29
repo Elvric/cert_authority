@@ -3,6 +3,9 @@ apt-get install net-tools nginx rsyslog-gnutls -y
 cp webserver/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir -p /etc/nginx/ssl
 cp webserver/cert/* /etc/nginx/ssl
+# chown -R vagrant /etc/nginx
+# chmod -R 700 /etc/nginx
+# chmod 600 /etc/nginx/ssl/web.key
 cp -r webserver/frontend/build/* /var/www/html/
 cat <<EOF > /etc/hosts
 172.27.0.2 caserver.imovies
@@ -24,13 +27,12 @@ iptables -F
 iptables -P INPUT DROP
 iptables -P FORWARD DROP
 iptables -P OUTPUT DROP
-iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
 iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A OUTPUT -d 172.27.0.2/32 -p tcp -m tcp --dport 443 -j ACCEPT
-iptables -A OUTPUT -d 172.27.0.4/32 -p tcp -m tcp --dport 6514 -j ACCEPT
-
+iptables -A OUTPUT -j ACCEPT -d 172.27.0.4/32 -p tcp --dport 6514
 
 
 #sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
@@ -39,4 +41,5 @@ iptables -A OUTPUT -d 172.27.0.4/32 -p tcp -m tcp --dport 6514 -j ACCEPT
 cp ./webserver/cert/cacert.pem /etc/ssl/certs/
 cp ./webserver/log/rsyslog.conf /etc/rsyslog.conf
 cp webserver/log/nginx.conf /etc/rsyslog.d/nginx.log
+rm -rf webserver
 systemctl restart rsyslog
