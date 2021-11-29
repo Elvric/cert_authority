@@ -1,5 +1,5 @@
 #!/bin/sh
-apt-get install net-tools nginx -y
+apt-get install net-tools nginx rsyslog-gnutls -y
 cp webserver/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir -p /etc/nginx/ssl
 cp webserver/cert/* /etc/nginx/ssl
@@ -19,19 +19,22 @@ EOF
 systemctl restart nginx
 
 # firewall
-sudo apt install -y iptables
-sudo iptables -F
-sudo iptables -P INPUT DROP
-sudo iptables -P FORWARD DROP
-sudo iptables -A FORWARD -s 172.26.0.0/24 -j ACCEPT
-sudo iptables -A FORWARD -p tcp --dport 22 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
-sudo iptables -A INPUT -s 172.27.0.2 -j ACCEPT
+#sudo apt install -y iptables
+#sudo iptables -F
+#iptables -P INPUT DROP
+#iptables -P FORWARD DROP
+#iptables -P OUTPUT DROP
+#iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+#iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+#iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+#iptables -A OUTPUT -d 172.27.0.2/32 -p tcp -m tcp --dport 443 -j ACCEPT
+
+
+#sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
 
 # rsyslog
-apt install rsyslog-gnutls -y
-cp webserver/log/rsyslog.conf /etc/rsyslog.conf
-cp webserver/log/nginx.conf /etc/rsyslog.d/nginx.conf
+cp ./webserver/cert/cacert.pem /etc/ssl/certs/
+cp ./webserver/log/rsyslog.conf /etc/rsyslog.conf
+cp webserver/log/nginx.conf /etc/rsyslog.d/nginx.log
 systemctl restart rsyslog
