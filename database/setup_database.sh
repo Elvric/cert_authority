@@ -26,29 +26,31 @@ sudo sed -i -r 's/^#( general_log)/\1/' /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql
 
 # setup backup
-mkdir ssh_keys
-mv db_priv_key ssh_keys
+apt install sshpass
+export SSHPASS=bC8LcLh2WuHtJKE7r4D2
+sshpass -e sftp -oStrictHostKeyChecking=no -oBatchMode=no -b - dbackup@172.27.0.4 << !
+quit
+!
 touch mysql_backup.sh
 cat << 'EOL' > mysql_backup.sh
 #!/bin/bash
 
 curr_date=`date +"%Y-%m-%d"`
 
-mysqldump -u root --password=$DBPASSWD imovies users > imovies_users_bkp_$curr_date.sql
+mysqldump -u dbackup --password=HpDMDF2dQexqGZQcag8D imovies > imovies_bkp_$curr_date.sql
 
- rm .ssh/known-host
-
-sftp -i ssh_keys/db_priv_key dbackup@172.27.0.4 << !
-put imovies_users_bkp_$curr_date.sql
+export SSHPASS=bC8LcLh2WuHtJKE7r4D2
+sshpass -e sftp -oBatchMode=no -b - dbackup@172.27.0.4 << !
+put imovies_bkp_$curr_date.sql
 quit
 !
 
-
-rm imovies_users_bkp_$curr_date.sql
+rm imovies_bkp_$curr_date.sql
 EOL
-#TODO: dbackup's backupserver password is prompted after sftp command --> maybe because this user has a password on backupserver
+chmod +x mysql_backup.sh
+
 crontab -l > cron_tmp
-echo "* * * * * mysql_backup.sh" > cron_tmp
+echo "0 9 * * * /home/vagrant/mysql_backup.sh" > cron_tmp
 crontab cron_tmp
 rm cron_tmp
 
