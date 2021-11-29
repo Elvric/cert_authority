@@ -25,8 +25,28 @@ function EditModal(props) {
   const handleChange = (e) => {
     props.setField(e.target.value);
   };
+
   const handleSubmit = async function (e) {
-    console.log("submit");
+    const verifyInput = (input, length = 1) => {
+      if (!input || input.length < length) {
+        window.alert(
+          `This field cannot be less than ${length} characters long !`
+        );
+        props.setShow(false);
+        return true;
+      }
+      return false;
+    };
+
+    const isValidEmail = (val) => {
+      let regEmail =
+        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+      return regEmail.test(val);
+    };
+
+    let shouldAbort = false;
+
     let uid = props.user.UserId;
     let password = props.user.Password;
     let firstName = props.user.FirstName;
@@ -34,19 +54,34 @@ function EditModal(props) {
     let email = props.user.Email;
     if (props.type === "User ID") {
       uid = props.field;
+      shouldAbort = verifyInput(uid);
     }
     if (props.type === "Password") {
       password = props.field;
+      shouldAbort = verifyInput(password, 6);
     }
     if (props.type === "First Name") {
       firstName = props.field;
+      shouldAbort = verifyInput(firstName);
     }
     if (props.type === "Last Name") {
       lastName = props.field;
+      shouldAbort = verifyInput(lastName);
     }
     if (props.type === "Email") {
       email = props.field;
+      shouldAbort = verifyInput(email);
+
+      if (!isValidEmail(email)) {
+        window.alert("This is not a valid email !");
+        shouldAbort = true;
+      }
     }
+
+    if (shouldAbort) {
+      return;
+    }
+
     /*
     props.setUser({
       UserId: uid,
@@ -89,14 +124,20 @@ function EditModal(props) {
         <ModalTitle>Edit {props.type}</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <Form>
+        <Form onSubmit={(e) => e.preventDefault()}>
           <Form.Group
             className="mb-3"
             controlId={props.type === "Password" ? "password" : "user"}
           >
             <Form.Label>{props.type}</Form.Label>
             <Form.Control
-              type={props.type === "Password" ? "password" : "user"}
+              type={
+                props.type === "Password"
+                  ? "password"
+                  : props.type === "Email"
+                  ? "email"
+                  : "user"
+              }
               rows={1}
               placeholder={""}
               value={props.field}
