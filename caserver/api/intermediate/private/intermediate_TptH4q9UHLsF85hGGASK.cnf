@@ -19,7 +19,7 @@ database          = $dir/index.txt
 serial            = $dir/serial
 
 # The root key and root certificate.
-private_key       = $dir/private/intermediate.key
+private_key       = $dir/private/intermediate_danXt8mN5dXAiV3WVx88.key
 certificate       = $dir/intermediate.pem
 
 # SHA-1 is deprecated, so use SHA-2 instead.

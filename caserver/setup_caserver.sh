@@ -7,8 +7,15 @@ mkdir -p /etc/nginx/ssl
 mkdir -p /etc/ca/intermediate
 cp caserver/cert/* /etc/nginx/ssl
 cp -R caserver/api/intermediate/* /etc/ca/intermediate
-chown -R www-data:www-data /etc/ca
-chmod u+x /etc/ca/intermediate/new_cert.sh
+chown -R vagrant:www-data /etc/ca
+chmod -R o-xr /etc/ca
+chmod 730 /etc/ca/intermediate/
+chmod 710  /etc/ca/intermediate/private
+chmod 730  /etc/ca/intermediate/certificates
+chmod 730  /etc/ca/intermediate/newcerts
+chwon vagrant /etc/ca/intermediate/new_cert.sh
+chmod 600 /etc/ca/intermeidate/new_cert.sh
+chmod g+x /etc/ca/intermediate/new_cert.sh
 mkdir -p /var/log/flask
 chown www-data:www-data /var/log/flask
 apt install python3 python3-pip -y
