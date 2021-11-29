@@ -300,20 +300,18 @@ def generate_certificate(user, is_admin) -> Response:
         f = open(f"/etc/ca/intermediate/certificates/tmp_cert.p12", 'rb')
         raw = f.read()
         f.close()
-        os.remove("/etc/ca/intermediate/certificates/tmp_cert.p12")
         user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
             raw, b'pass')
 
         # backup cert
-        # with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
-        #     app.logger.debug("SFTP: ESTABLISHED")
-        #     try:
-        #         res = sftp.put(f"/etc/ca/intermediate/certificates/{serial}_{uid}.p12",f"/backup/{serial}_{uid}.p12", preserve_mtime=True)
-        #         app.logger.debug("SFTP: OK")
-        #     except:
-        #         app.logger.error(traceback.print_exc())
-        #         make_response("Error in backing up, no cert issued", 505)
-        #
+        with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
+            app.logger.debug("SFTP: ESTABLISHED")
+            try:
+                res = sftp.put(f"/etc/ca/intermediate/certificates/tmp_cert.p12",f"/backup/{serial}_{uid}.p12", preserve_mtime=True)
+                app.logger.debug("SFTP: OK")
+            except:
+                make_response("Error in backing up, no cert issued", 505)
+        os.remove("/etc/ca/intermediate/certificates/tmp_cert.p12")
         # store in db
         pem_encoding = serialize_cert(user_certificate)
         query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
