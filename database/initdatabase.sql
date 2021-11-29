@@ -29,7 +29,7 @@ grant select on imovies.users to dbackup@localhost;
 grant select on imovies.isadmin to dbackup@localhost;
 grant select on imovies.certificates to dbackup@localhost;
 grant lock tables on *.* to dbackup@localhost;
-grant trigger on imovies.isadminInsert to dbackup@localhost;
+grant trigger on *.* to dbackup@localhost;
 grant process on *.* to dbackup@localhost;
 flush privileges;
 
