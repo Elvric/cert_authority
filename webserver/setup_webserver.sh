@@ -32,7 +32,6 @@ sudo iptables -A INPUT -s 172.27.0.2 -j ACCEPT
 
 # rsyslog
 apt install rsyslog-gnutls -y
-cp webserver/cert/cacert.pem /etc/ssl/certs/
 cp webserver/log/rsyslog.conf /etc/rsyslog.conf
 cp webserver/log/nginx.conf /etc/rsyslog.d/nginx.conf
 systemctl restart rsyslog

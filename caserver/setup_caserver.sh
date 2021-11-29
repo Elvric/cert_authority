@@ -13,7 +13,7 @@ chmod 730 /etc/ca/intermediate/
 chmod 710  /etc/ca/intermediate/private
 chmod 730  /etc/ca/intermediate/certificates
 chmod 730  /etc/ca/intermediate/newcerts
-chwon vagrant /etc/ca/intermediate/new_cert.sh
+chown vagrant /etc/ca/intermediate/new_cert.sh
 chmod 600 /etc/ca/intermeidate/new_cert.sh
 chmod g+x /etc/ca/intermediate/new_cert.sh
 mkdir -p /var/log/flask
