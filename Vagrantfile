@@ -38,7 +38,6 @@ Vagrant.configure("2") do |config|
     db.vm.provision "file", source: "./database/cert", destination: "cert"
     db.vm.provision "file", source: "./database/my.cnf", destination: "my.cnf"
     db.vm.provision "file", source: "./database/rsyslog.conf", destination: "rsyslog.conf"
-    db.vm.provision "file", source: "./database/ssh_keys/db_priv_key", destination: "db_priv_key"
     db.vm.provision "shell", path: "./database/setup_database.sh"
     db.vm.network "private_network", ip: "172.27.0.3", virtualbox__intnet: "internal_net"
     db.vm.network "forwarded_port", guest: 3306, host: 3306
