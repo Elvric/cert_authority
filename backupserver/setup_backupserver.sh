@@ -7,9 +7,7 @@ EOF
 mkdir -p /data
 chmod 701 /data
 groupadd sftp_users
-groupadd admin
 users=(dbackup cabackup)
-# TODO remove if loging with certs
 pass=(bC8LcLh2WuHtJKE7r4D2 LZB33eeKa7rhz2PeDjNb)
 
 for i in {0..1}; do
@@ -28,5 +26,5 @@ systemctl restart sshd
 apt update
 apt install rsyslog-gnutls -y
 cp ./backupserver/rsyslog.conf /etc/rsyslog.conf
-sudo chown -R syslog:admin ./backupserver/cert # this was needed
+sudo chown -R syslog:syslog ./backupserver/cert # this was needed
 systemctl restart rsyslog
