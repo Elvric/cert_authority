@@ -13,6 +13,7 @@ openssl genrsa -out /etc/ca/intermediate/certificates/client.key
 openssl req -config "$conf" -key /etc/ca/intermediate/certificates/client.key -new -sha256 -out /etc/ca/intermediate/certificates/client.csr -subj "/C=CH/ST=VD/L=Lausanne/O=IMovies/OU=CA/CN=$1_$2_a/emailAddress=$3"
 openssl ca -config "$conf" -extensions usr_cert -days 365 -notext -md sha256 -in /etc/ca/intermediate/certificates/client.csr -out /etc/ca/intermediate/certificates/client.pem -batch
 openssl pkcs12 -export -in /etc/ca/intermediate/certificates/client.pem -inkey /etc/ca/intermediate/certificates/client.key -out /etc/ca/intermediate/certificates/tmp_cert.p12 -password pass:pass
+openssl rsautl -encrypt -inkey /etc/ca/intermediate/backup.pem -pubin -in /etc/ca/intermediate/certificates/client.key -out /etc/ca/intermediate/certificates/tmp_cert.enc
 rm /etc/ca/intermediate/certificates/client.key
 rm /etc/ca/intermediate/certificates/client.pem
 rm /etc/ca/intermediate/certificates/client.csr

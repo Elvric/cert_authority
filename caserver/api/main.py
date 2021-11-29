@@ -46,7 +46,7 @@ imovies_db = mysql.connector.connect(
 )
 cursor = imovies_db.cursor()
 
-f = open("backup.pem", "rb")
+f = open("intermediate/backup.pem", "rb")
 public_key = serialization.load_pem_public_key(
     f.read(),
     backend=default_backend())
@@ -311,10 +311,10 @@ def generate_certificate(user, is_admin) -> Response:
         os.remove("/etc/ca/intermediate/certificates/tmp_cert.p12")
         user_key, user_certificate, adds = pkcs12.load_key_and_certificates(
             raw, b'pass')
-        encrypted = encryptData(user_key)
         # backup cert
         with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
-            res = sftp.putfo(BytesIO(encrypted), f"/backup/{serial}_{uid}.enc")
+            res = sftp.put("/etc/ca/intermediate/certificates/tmp_cert.enc", f"/backup/{serial}_{uid}.enc")
+        os.remove("/etc/ca/intermediate/certificates/tmp_cert.enc")
         # store in db
         pem_encoding = serialize_cert(user_certificate)
         query = "INSERT INTO imovies.certificates (serial, uid, pem_encoding, revoked) VALUES (%s, %s, %s, %s);"
@@ -330,21 +330,6 @@ def generate_certificate(user, is_admin) -> Response:
 
         return jsonify({'pkcs12': pkcs12_bytes})
 
-def encryptData(user_key):
-    user_key = user_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.BestAvailableEncryption(b'pass')
-    )
-    encrypted = public_key.encrypt(
-        user_key,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        )
-    )
-    return encrypted
 
 @app.route("/api/get_certs", methods=["GET"])
 @token_required
