@@ -225,6 +225,7 @@ export default function Home() {
   const [show, setShow] = useState(false);
   const [type, setType] = useState("");
   const [showRevoke, setShowRevoke] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   async function requestCertificate(e) {
@@ -255,14 +256,19 @@ export default function Home() {
             LastName: res.data.lastname,
             Email: res.data.email,
           });
+
+          setIsLoading(false);
         }
       } catch (err) {
+        setIsLoading(true);
         window.alert("Error retrieving data!");
       }
     })();
   }, []);
 
-  return (
+  return isLoading ? (
+    <div>...</div>
+  ) : (
     <div className="HomePage">
       <Nav />
       <Container className="pt-2 pr-5 mt-5 mr-5">

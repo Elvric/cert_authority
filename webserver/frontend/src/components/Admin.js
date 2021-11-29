@@ -16,7 +16,7 @@ const axios = require("axios").default;
 
 export default function Home() {
   const AuthContext = AuthConsumer();
-  const isadmin = AuthContext.state.isAdmin;
+  const [isAdmin, setIsAdmin] = React.useState(false);
   //const isadmin = true;
   const [CAState, setCAState] = useState({
     serial: 0,
@@ -36,14 +36,16 @@ export default function Home() {
             revoked: res.data.revoked,
             revoked_certs: [...res.data.revoked_certs],
           });
+          setIsAdmin(true);
         }
       } catch (err) {
         window.alert("Error!");
+        setIsAdmin(false);
       }
     })();
   }, []);
 
-  if (!isadmin) {
+  if (!isAdmin) {
     return <div> 403 Unauthorized</div>;
   } else {
     return (

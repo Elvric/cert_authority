@@ -22,6 +22,11 @@ for i in {0..1}; do
   chown -R "${users[i]}":admin "/data/${users[i]}/backup"
 done
 
+# link SSH public keys to users
+mkdir usrs_pub_keys
+mv db_pub_key.pub usrs_pub_keys
+cat usrs_pub_keys/db_pub_key.pub >> /home/dbbackup/.ssh/authorized_keys
+
 systemctl restart sshd
 
 # Rsyslog

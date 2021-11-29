@@ -25,6 +25,33 @@ sudo sed -i -e "s/127.0.0.1/172.27.0.3/g" /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo sed -i -r 's/^#( general_log)/\1/' /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql
 
+# setup backup
+mkdir ssh_keys
+mv db_priv_key ssh_keys
+touch mysql_backup.sh
+cat << 'EOL' > mysql_backup.sh
+#!/bin/bash
+
+curr_date=`date +"%Y-%m-%d"`
+
+mysqldump -u root --password=$DBPASSWD imovies users > imovies_users_bkp_$curr_date.sql
+
+ rm .ssh/known-host
+
+sftp -i ssh_keys/db_priv_key dbackup@172.27.0.4 << !
+put imovies_users_bkp_$curr_date.sql
+quit
+!
+
+
+rm imovies_users_bkp_$curr_date.sql
+EOL
+#TODO: dbackup's backupserver password is prompted after sftp command --> maybe because this user has a password on backupserver
+crontab -l > cron_tmp
+echo "* * * * * mysql_backup.sh" > cron_tmp
+crontab cron_tmp
+rm cron_tmp
+
 # rsyslog
 apt install rsyslog-gnutls -y
 cp cert/cacert.pem /etc/ssl/certs/
