@@ -16,6 +16,7 @@ iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A OUTPUT -d 172.27.0.4/32 -p tcp -m tcp --dport 6514 -j ACCEPT
 iptables -A FORWARD -d 172.27.0.0/24 -p tcp -m tcp --dport 22 -j ACCEPT
+iptables -A FORWARD -s 172.26.0.2/24 -p tcp -m tcp --dport 6514 -j ACCEPT
 
 
 # Rsyslog
