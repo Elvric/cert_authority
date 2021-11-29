@@ -17,7 +17,7 @@ for i in {0..1}; do
   chmod o-rwx "/data/${users[i]}/backup"
   chmod o-rwx "/data/${users[i]}"
   chown -R root:sftp_users "/data/${users[i]}"
-  chown -R "${users[i]}":admin "/data/${users[i]}/backup"
+  chown -R "${users[i]}":vagrant "/data/${users[i]}/backup"
 done
 
 systemctl restart sshd
@@ -26,5 +26,6 @@ systemctl restart sshd
 apt update
 apt install rsyslog-gnutls -y
 cp ./backupserver/rsyslog.conf /etc/rsyslog.conf
-sudo chown -R syslog:syslog ./backupserver/cert # this was needed
+chown -R syslog:syslog ./backupserver/cert # this was needed
+chmod -R o-r ./backupserver/cert
 systemctl restart rsyslog
