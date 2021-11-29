@@ -19,16 +19,17 @@ EOF
 systemctl restart nginx
 
 # firewall
-#sudo apt install -y iptables
-#sudo iptables -F
-#iptables -P INPUT DROP
-#iptables -P FORWARD DROP
-#iptables -P OUTPUT DROP
-#iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
-#iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-#iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
-#iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-#iptables -A OUTPUT -d 172.27.0.2/32 -p tcp -m tcp --dport 443 -j ACCEPT
+apt install -y iptables
+iptables -F
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT DROP
+iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -d 172.27.0.2/32 -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -A OUTPUT -j ACCEPT -d 172.27.0.4/32 -p tcp --dport 6514
 
 
 #sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
