@@ -2,7 +2,7 @@
 cat <<EOF >> /etc/ssh/sshd_config
 Match User cabackup,dbackup
   ChrootDirectory /data/%u
-  ForceCommand internal-sftp -u 0277 -P remove,rmdir
+  ForceCommand internal-sftp -u 0227 -P remove,rmdir
 EOF
 mkdir -p /data
 chmod 701 /data
@@ -30,3 +30,18 @@ cp ./backupserver/rsyslog.conf /etc/rsyslog.conf
 chown -R syslog:syslog ./backupserver/cert # this was needed
 chmod -R o-r ./backupserver/cert
 systemctl restart rsyslog
+
+# Backup
+chmod -R o-rx ./backupserver/encrypt_keys
+mkdir -p client_privkey_backup
+chown vagrant:vagrant client_privkey_backup
+chmod -R o-rx client_privkey_backup
+chmod u+x backup_client_privekey.sh
+echo "* * * * * /home/vagrant/backup_client_privekey.sh " > /tmp/mycron
+mkdir -p db_backup
+chown vagrant:vagrant db_backup
+chmod -R o-rx db_backup
+chmod u+x mv_db_backup.sh
+echo "* * * * * /home/vagrant/mv_db_backup.sh " >> /tmp/mycron
+crontab -u vagrant /tmp/mycron
+rm /tmp/mycron
