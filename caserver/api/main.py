@@ -416,7 +416,7 @@ def get_ca_status(user, is_admin):
         revoked_certs = cursor.fetchall()
 
         return jsonify(
-            {"serial": int(serial, 16), "issued": issued, "revoked": revoked, "revoked_certs": revoked_certs})
+            {"serial": serial, "issued": issued, "revoked": revoked, "revoked_certs": revoked_certs})
 
 
 if __name__ == "__main__":
