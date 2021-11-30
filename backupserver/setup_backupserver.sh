@@ -1,12 +1,13 @@
 #!/bin/bash
 cat <<EOF >> /etc/ssh/sshd_config
-Match Group sftp_users
+Match User cabackup,dbackup
   ChrootDirectory /data/%u
   ForceCommand internal-sftp -u 0277 -P remove,rmdir
 EOF
 mkdir -p /data
 chmod 701 /data
 groupadd sftp_users
+usermod -a -G sftp_users vagrant
 users=(dbackup cabackup)
 pass=(bC8LcLh2WuHtJKE7r4D2 LZB33eeKa7rhz2PeDjNb)
 
