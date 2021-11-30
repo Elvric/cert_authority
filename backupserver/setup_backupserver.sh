@@ -42,6 +42,6 @@ mkdir -p db_backup
 chown vagrant:vagrant db_backup
 chmod -R o-rx db_backup
 chmod u+x mv_db_backup.sh
-echo "* * * * * /home/vagrant/mv_db_backup.sh " >> /tmp/mycron
+echo "5 9 * * * /home/vagrant/mv_db_backup.sh " >> /tmp/mycron
 crontab -u vagrant /tmp/mycron
 rm /tmp/mycron
