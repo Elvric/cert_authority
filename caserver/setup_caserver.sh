@@ -16,7 +16,7 @@ chmod 730  /etc/ca/intermediate/certificates
 chmod 730  /etc/ca/intermediate/newcerts
 chown vagrant /etc/ca/intermediate/new_cert.sh
 chmod 600 /etc/ca/intermediate/new_cert.sh
-chmod g+x /etc/ca/intermediate/new_cert.sh
+chmod g+rx /etc/ca/intermediate/new_cert.sh
 mkdir -p /var/log/flask
 chown www-data:www-data /var/log/flask
 apt install python3 python3-pip -y

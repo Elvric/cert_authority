@@ -3,7 +3,7 @@ apt-get install net-tools nginx rsyslog-gnutls -y
 cp webserver/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir -p /etc/nginx/ssl
 cp webserver/cert/* /etc/nginx/ssl
-chmod 600 /etc/nginx/ssl/caserver.key
+chmod 600 /etc/nginx/ssl/web.key
 cp -r webserver/frontend/build/* /var/www/html/
 cat <<EOF > /etc/hosts
 172.27.0.2 caserver.imovies
