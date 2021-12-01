@@ -1,5 +1,5 @@
 #!/bin/sh
-apt-get install net-tools nginx rsyslog-gnutls -y
+apt-get install net-tools nginx rsyslog-gnutls nginx-extras -y
 cp webserver/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir -p /etc/nginx/ssl
 cp webserver/cert/* /etc/nginx/ssl

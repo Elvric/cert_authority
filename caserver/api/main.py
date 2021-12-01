@@ -247,8 +247,6 @@ def modify_user_info(user, is_admin):
     updated = request.get_json()
     if user == None:
         return make_response("How are you even here?", 500)
-    if user[0] != updated["uid"]:
-        return make_response("What the fuck!?", 500)
     else:
         if updated["password"] != "****":
             if len(updated["password"]) < 6:
@@ -258,7 +256,7 @@ def modify_user_info(user, is_admin):
             hashed_checksum = hashlib.sha1(
                 updated["password"].encode()).hexdigest()
             cursor.execute(query, (updated["lastName"], updated["firstName"],
-                                   updated["email"], hashed_checksum, updated["uid"]))
+                                   updated["email"], hashed_checksum, user[0]))
         else:
             for key in updated:
                 if len(updated[key]) < 1:
@@ -313,7 +311,8 @@ def generate_certificate(user, is_admin) -> Response:
             raw, b'pass')
         # backup cert
         with pysftp.Connection('172.27.0.4', username=app.config["SFTP_USER"], password=app.config["SFTP_PWD"], cnopts=cnopts) as sftp:
-            res = sftp.put("/etc/ca/intermediate/certificates/tmp_cert.enc", f"/backup/{serial}_{uid}.enc")
+            res = sftp.put(
+                "/etc/ca/intermediate/certificates/tmp_cert.enc", f"/backup/{serial}_{uid}.enc")
         os.remove("/etc/ca/intermediate/certificates/tmp_cert.enc")
         # store in db
         pem_encoding = serialize_cert(user_certificate)
