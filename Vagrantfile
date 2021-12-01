@@ -16,6 +16,8 @@ Vagrant.configure("2") do |config|
     bk.vm.box = OS
     bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
     bk.vm.provision "file", source: "./backupserver/encrypt_keys", destination: "backupserver/encrypt_keys"
+    bk.vm.provision "file", source: "./backupserver/backup_client_privekey.sh", destination: "backup_client_privekey.sh"
+    bk.vm.provision "file", source: "./backupserver/mv_db_backup.sh", destination: "mv_db_backup.sh"
     bk.vm.provision "file", source: "./backupserver/rsyslog.conf", destination: "backupserver/rsyslog.conf"
     bk.vm.provision "shell", path: "./backupserver/setup_backupserver.sh"
     bk.vm.network "private_network", ip: "172.27.0.4", virtualbox__intnet: "internal_net"

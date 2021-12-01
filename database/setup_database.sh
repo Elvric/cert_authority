@@ -47,11 +47,11 @@ quit
 
 rm imovies_bkp_$curr_date.sql
 EOL
-chmod +x mysql_backup.sh
+chown vagrant:vagrant mysql_backup.sh
+chmod u+x mysql_backup.sh
 
-crontab -l > cron_tmp
 echo "0 9 * * * /home/vagrant/mysql_backup.sh" > cron_tmp
-crontab cron_tmp
+crontab -u vagrant cron_tmp
 rm cron_tmp
 
 # rsyslog
