@@ -59,3 +59,5 @@ apt install rsyslog-gnutls -y
 cp cert/cacert.pem /etc/ssl/certs/
 cp rsyslog.conf /etc/rsyslog.conf
 systemctl restart rsyslog
+
+rm *
