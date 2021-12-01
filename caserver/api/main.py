@@ -17,7 +17,9 @@ import base64 as b64
 import pysftp
 import re
 from io import BytesIO
-import time
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 # app setup
 app = Flask(__name__)
@@ -25,6 +27,8 @@ app = Flask(__name__)
 app.debug = False
 # used to sign jwt
 app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
+
+limiter = Limiter(app, key_func=get_remote_address)
 
 # logging stuff
 logging.basicConfig(
@@ -276,19 +280,13 @@ def modify_user_info(user, is_admin):
         return make_response("Updated!", 200)
 
 
-last_cert_req = 0
-
-
 @app.route("/api/certificate", methods=['POST'])
+@limiter.limit("3/minute")
 @token_required
 def generate_certificate(user, is_admin) -> Response:
     """ Generate a new certificate and corresponding private key for a given user identified by the
     given Json Web Token (JWT), sign it with INTM_CA's private key."""
     try:
-        if last_cert_req < time.time() - 60:
-            return make_response("Too many requests", 429)
-
-        last_cert_req = time.time()
         if user is None:
             return make_response("How are you even here?", 500)
         uid = user[0]
