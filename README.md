@@ -1,61 +1,65 @@
-# Virtual Machines
+# MOVE YOUR VENV from caserver/api to caserver 
+otherwise vagrant will try to copy it to the CA VM (taking too much time)
 
-All the virtual machine can be downloaded from the following link as OVA:
+# Installing Vagrant
+Follow this [link](https://www.vagrantup.com/downloads) and your wishes shall
+be granted
 
-The VMs used pre-defined shared folders, they are pre-configured to access the project at the following path from the host: `/etc/cert_authority`.
+# Installing the Webserver
+In order to keep the attack surface the VM as small as possible we do not install 
+npm or nodejs on the server everything is built locally
+Hence before using vagrant do the following:
+```shell
+cd webserver/frontend
+nmp install
+npm run build
+```
+From there you can run `vagrant up webserver`.
 
-Each VM has access to its code folder at the root of the system. For example: /etc/cert_authority/caserver is binded to /caserver inside of the caserver VM.
+# Backupserver
+password of private key: K8j3HzCbU28zDHuareDf
 
-The network is configured and VMs can communicate with each other. I also added a `run.sh` script to each VM to run the necessary code when it is updated.
+# Virtual Machines and Vagrant
+When running vagrant ensure that you are in the root directory of this project.
+All the setup is in the `Vagrantfile`
 
-Each VM has SSH installed and port 22 open.
+`vagrant up` spawns all the VMs  
+`vagrant up [name]` only spawns the VM mentioned  
+`vagrant destroy` destroys the VM similar to `docker-compose down`  
+`vagrant destroy [name]` only destroys the VM mentioned  
+`vagrant provision` run all the provision commands in the `VagrantFile`  
+`vagrant provision [name]` only runs the provision of the machine specified  
+`vagrant status` shows you what services are currently running
 
-The react server should be running and be accessible from the Client VM at `https://172.26.0.2/`.
+`vagrant ssh [name]` ssh you inside the VM mentioned,
 
-## Not done atm:
+**You can also see the VMs by opening virtual box**
 
-- I was not able to run the CAServer using uWSGI yet ("module wsgi not found").
-- I get a TLS error when trying to connect to the database from the CA Server main.py
-- I didn't configure the firewall yet since we might still need internet, but it can be easily done with the `setup_firewall.sh`
+## TODOS
 
-**For the webserver:** for now install NPM dependencies from the host rather than from the guest VM.
+### Database
+Seem to work fine, no problem there
+backup encryption passphrase:
+26qdJ6ZJsPz9QKOCm86P
 
-# CAServer
+### CaServer
+Seem to work fine, no problem there
 
-In order to ensure that the project can run properly on all the collaborators please do
-the following:
+### Webserver
+- Need to add user authentication with certificate + admin authentication
+- Need to save user certificate to backup
 
-1. run `setup_project.sh`
+#### Certificate Authentication
+- 1: user uploads his pkcs12 file into browser (use chrome or chromium cause Firefox has a bug wrt pkcs12 that are not encrypted).
+- 2: user tries to go to login_w_cert. If he has a certificate he can access the page, ow Nginx throws 403
+- 3: user clicks Login and triggers a get request to api/login_with_cert. From here nginx will proxy the request to the backend adding the serial of the certificate in the header as X-serial
+- 4: the backend will look for the certificate using the serial trying to see if the certificate is still valid and then if the owner is a admin
 
-This will install some python tools that are used to manage python environment.
-At the end it will automatically create a python virtual environment under `./caserver/api/venv`
-directory.
+### Firewall
+Settup and running
 
-## Installing dependencies and working on the python scripts for the CA Server
-
-Ensure you are in the correct python virtual environment at all time. To be in
-the environment run `source ./caserver/api/venv/bin/activate`. From there run
-`pip3 install -r requirements.txt`
-
-# WebServer
-
-As with the CAServer, running the `setup_project.sh` script will install the requirements to run the react webserver.
-The frontend code is located in `webserver/frontend` and can be started using `npm start`.
-
-## Backup Structure
-
-We are going to have a private public key pair, all data that is goign to be logged
-will be encrypted and sent to the backup server in this form.
-
-The private key will be stored on the backup server to decrypt the data with a passphrase
-that is known only by the sysadmin.
-
-# The problem with tls in the db
-
-Soo, basically we had this big problem in which the db container was using mysql version 5.7.21 that used this library called yaSSL that was shit. It has so much problems plus tls goes up to version 1.1
-
-Now I changed it and now we are running mysql 5.7.31 with tls v1.2
-
-Now the problem is setting up the tls connection between the db and the caserver. In particular I don't know why but the db is
-failing to read the private key `db.key` that I am passing, so basically the caserver is not able to verify the certificate issued
-by the db server. I will try to find a solution, but any help is super appreciated :)
+## Things that need to be done before submitting the project
+- Check all the TODOs in the project then do `vagrant destroy` `vagrant up`
+- Change the vagrant user to admin user with a hard password
+- Disable ssh vagrant
+- Disable the no password sudo property of the vagrant user
