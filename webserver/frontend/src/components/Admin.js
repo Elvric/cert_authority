@@ -17,6 +17,7 @@ const axios = require("axios").default;
 export default function Home() {
   const AuthContext = AuthConsumer();
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   //const isadmin = true;
   const [CAState, setCAState] = useState({
     serial: 0,
@@ -28,6 +29,7 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
+        setIsLoading(true);
         const res = await axios.get("/api/admin");
         if (res.status === 200) {
           setCAState({
@@ -37,15 +39,19 @@ export default function Home() {
             revoked_certs: [...res.data.revoked_certs],
           });
           setIsAdmin(true);
+          setIsLoading(false);
         }
       } catch (err) {
         window.alert("Error!");
         setIsAdmin(false);
+        setIsLoading(false);
       }
     })();
   }, []);
 
-  if (!isAdmin) {
+  if (isLoading) {
+    return <div></div>;
+  } else if (!isAdmin) {
     return <div> 403 Unauthorized</div>;
   } else {
     return (

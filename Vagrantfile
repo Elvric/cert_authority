@@ -5,16 +5,24 @@
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
+
+$script = <<-SCRIPT
+sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+systemctl restart sshd
+SCRIPT
+
 OS = "generic/ubuntu2004"
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 512
     v.cpus = 1
   end
+  config.vm.provision "shell", inline: $script
 
   config.vm.define "backupserver" do |bk|
     bk.vm.box = OS
-    bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
+    #bk.vm.provision "file", source: "./backupserver/cert", destination: "backupserver/cert"
     bk.vm.provision "file", source: "./backupserver/encrypt_keys", destination: "backupserver/encrypt_keys"
     bk.vm.provision "file", source: "./backupserver/backup_client_privekey.sh", destination: "backup_client_privekey.sh"
     bk.vm.provision "file", source: "./backupserver/mv_db_backup.sh", destination: "mv_db_backup.sh"
@@ -59,7 +67,6 @@ Vagrant.configure("2") do |config|
 config.vm.define "webserver" do |wb|
     wb.vm.box = OS
     wb.vm.network "private_network", ip: "172.26.0.2", virtualbox__intnet: "dmz"
-    wb.vm.network "forwarded_port", guest: 443, host: 4443
     wb.vm.provision "file", source: "./webserver/cert", destination: "webserver/cert"
     wb.vm.provision "file", source: "./webserver/nginx", destination: "webserver/nginx"
     wb.vm.provision "file", source: "./webserver/log", destination: "webserver/log"

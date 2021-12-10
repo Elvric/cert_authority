@@ -1,6 +1,6 @@
 #!/bin/sh
 apt update
-apt install nginx net-tools rsyslog-gnutls -y
+apt install nginx net-tools rsyslog-gnutls nginx-extras -y
 apt install libpcre3 libpcre3-dev -y
 cp caserver/nginx/nginx.conf /etc/nginx/sites-available/default
 mkdir -p /etc/nginx/ssl

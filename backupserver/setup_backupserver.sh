@@ -1,6 +1,7 @@
 #!/bin/bash
 cat <<EOF >> /etc/ssh/sshd_config
 Match User cabackup,dbackup
+  PasswordAuthentication yes
   ChrootDirectory /data/%u
   ForceCommand internal-sftp -u 0227 -P remove,rmdir
 EOF

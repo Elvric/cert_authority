@@ -272,7 +272,7 @@ export default function Home() {
   async function requestCertificate(e) {
     e.preventDefault();
     try {
-      const res = await axios.get("/api/certificate");
+      const res = await axios.post("/api/certificate");
       if (res.status == 200) {
         let data = new Blob([Buffer.from(res.data.pkcs12)], {
           type: "application/octet-stream",

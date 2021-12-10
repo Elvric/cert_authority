@@ -29,7 +29,7 @@ function useAuth() {
     state,
     verifyTokenCookie: async () => {
       try {
-        const res = await axios.get("/api/is_logged_in");
+        const res = await axios.post("/api/is_logged_in");
         if (res.status === 200) {
           const { authed, isAdmin } = res.data;
           setState({ isLoading: false, authed, isAdmin });
@@ -61,7 +61,7 @@ function useAuth() {
     },
     loginWithCert: async () => {
       try {
-        const res = await axios.get("/api/login_with_cert");
+        const res = await axios.post("/api/login_with_cert");
 
         if (res.status === 200) {
           const { authed, isAdmin } = res.data;
@@ -78,7 +78,7 @@ function useAuth() {
     },
     logout: async () => {
       try {
-        await axios.get("/api/logout");
+        await axios.post("/api/logout");
         setState((s) => ({ authed: false, isLoading: false, isAdmin: false }));
       } catch (err) {
         setState((s) => ({ authed: false, isLoading: false, isAdmin: false }));
