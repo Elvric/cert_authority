@@ -1,4 +1,5 @@
 # Black Box Review
+In this section we will describe our approach to breach the system. We used a machine connecting to the external Firewall from the Internet, simulating an external attacker trying to violate the system.
 
 ## Port Scanning
 
