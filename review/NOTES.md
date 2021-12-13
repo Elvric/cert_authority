@@ -6,7 +6,8 @@
 `nmap -p 0-65535 www.imovies.com` shows port 22,80,443 as open. Ports 8008 and 8080 are closed. All the other ports are filtered.
 This means that ports 8008 and 8080 are not filtered by any firewall rule, but no service on the host is listening on such ports.
 ### Reconnaissance
-`nmap -O -sV -p 80,443,22 www.imovies.com` gives the version of the services running on the ports as well as information on the host Operating System.
+`nmap -O -sV -p 80,443,22,8008,8080 www.imovies.com` gives the version of the services running on the ports as well as information on the host Operating System. Note that we probe also closed ports, in order to have a complete fingerprint of the TCP/IP stack running on the host OS.
+Results:
 - ports 80 and 443 expose a nginx reverse proxy version 1.18.0. (Ubuntu)
 - port 22 exposes OpenSSH version 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
 We do not have clear information regarding the kernel version of the host, since `nmap` confidence for guesses ranging from kernel version 2.6.32 to 4.11.
@@ -26,5 +27,6 @@ The results are the following (the list is meant to be non-exhaustive):
 All endpoints but `login` return a 302 status since they are redirecting to `login` for user authentication.
 
 ## Vulnerabilities
-Using `BurpSuite`, we conducted an active scan on the hosts and its endpoints. Furthermore, we have tried payloads for testing common web vulnerabilities, in particular XSS and SSTI. The application seems to be not vulnerable to these attacks.
-The only vulnerability (of low severity) we managed to find in this step is related to the session cookie. It lacks the secure flag set. If an attacker were able to generate request to http://www.imovies.com, she would be able to hijack the session cookie for the victim.
+Using `BurpSuite`, we conducted an active scan on the hosts and its endpoints. Furthermore, we have tried payloads for testing common web vulnerabilities, in particular XSS, SQLi, and SSTI. The application seems to be not vulnerable to these attacks.
+The only vulnerability (of low severity) we managed to find in this step is related to the session cookie. It lacks the secure flag set. If an attacker were able to sniff requests to http://www.imovies.com, she would be able to hijack the session cookie for the victim. Note that this applies even if the reviewed system redirects to `https`. An acceptable countermeasure is the use of `Strict-Transport-Security`, which is correctly applied by the system with a timeout of around 2 years.
+There is also a minor issue in the TLS certificate provided by the webserver: the certificate is only valid for the domain `imovies.com`, not `www.imovies.com`. This might lead to MITM attacks if attacker were able to register the `www.imovies.com` domain and have a certificate issued for that.
