@@ -31,7 +31,7 @@ The results are the following (the list is meant to be non-exhaustive):
 All endpoints but `login` return a 302 status since they are redirecting to `login` for user authentication.
 
 ## Vulnerabilities
-Using `BurpSuite`, we conducted an active scan on the hosts and its endpoints. Furthermore, we have tried payloads for testing common web vulnerabilities, in particular XSS, SQLi, and SSTI. The application seems to be not vulnerable to these attacks.
+Using `BurpSuite`, we conducted an active scan on the hosts and its endpoints. Furthermore, we have manually probed the system using payloads for testing common web vulnerabilities, in particular XSS, SQLi, and SSTI. The application seems to be not vulnerable to these attacks.
 The only vulnerability (of low severity) we managed to find in this step is related to the session cookie. It lacks the secure flag set. If an attacker were able to sniff requests to http://www.imovies.com, she would be able to steal the session cookie from the victim. Note that this applies even if the reviewed system redirects to `https`. An acceptable countermeasure is the use of `Strict-Transport-Security`, which is correctly applied by the system with a timeout of around 2 years.
 There is also a minor issue in the TLS certificate provided by the webserver: the certificate is only valid for the domain `imovies.com`, not `www.imovies.com`. This might lead to MITM attacks if attacker were able to register the `www.imovies.com` domain and have a certificate issued for that.
 
@@ -69,6 +69,12 @@ It is possible to login as any user by intercepting the POST request to the /log
 - Potential issue with clients private keys as the sysadmin cannot retrieve the clients private keys without the client passphrase
 - Encrypted clients private keys are stored on the CA sqlite database
 
+<<<<<<< HEAD
 ## Backup
 - Only backup databases of the CA and of the database
 - No backup of sysadmin activities or nginx connections
+=======
+##1. Broken Access Control
+It is possible to login as any user by intercepting the POST request to the /login endpoint (e.g using a proxy like BurpSuite) and stripping away the password parameter. It is thus sufficient to know the userid of the user. Concretely, the POST request body will contain only the `csrf_token` and `userid` parameters.
+By doing so, we can issue certificates on behalf of admins, thus gaining access to the admin control panel.
+>>>>>>> 6932e111fb442eb38cebf2516e6c8c784592de01
