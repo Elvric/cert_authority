@@ -50,4 +50,5 @@ User login and session management is implemented using `flask_login` library, wh
 #Back Doors
 
 ##1. Broken Access Control
-It is possible to login as any user by intercepting the POST request to the /login endpoint and stripping away the password parameter. It is thus sufficient to know the userid of the user.
+It is possible to login as any user by intercepting the POST request to the /login endpoint (e.g using a proxy like BurpSuite) and stripping away the password parameter. It is thus sufficient to know the userid of the user. Concretely, the POST request body will contain only the `csrf_token` and `userid` parameters.
+By doing so, we can issue certificates on behalf of admins, thus gaining access to the admin control panel.
