@@ -28,7 +28,7 @@ The results are the following (the list is meant to be non-exhaustive):
 All endpoints but `login` return a 302 status since they are redirecting to `login` for user authentication.
 
 ## Vulnerabilities
-Using `BurpSuite`, we conducted an active scan on the hosts and its endpoints. Furthermore, we have tried payloads for testing common web vulnerabilities, in particular XSS, SQLi, and SSTI. The application seems to be not vulnerable to these attacks.
+Using `BurpSuite`, we conducted an active scan on the hosts and its endpoints. Furthermore, we have manually probed the system using payloads for testing common web vulnerabilities, in particular XSS, SQLi, and SSTI. The application seems to be not vulnerable to these attacks.
 The only vulnerability (of low severity) we managed to find in this step is related to the session cookie. It lacks the secure flag set. If an attacker were able to sniff requests to http://www.imovies.com, she would be able to steal the session cookie from the victim. Note that this applies even if the reviewed system redirects to `https`. An acceptable countermeasure is the use of `Strict-Transport-Security`, which is correctly applied by the system with a timeout of around 2 years.
 There is also a minor issue in the TLS certificate provided by the webserver: the certificate is only valid for the domain `imovies.com`, not `www.imovies.com`. This might lead to MITM attacks if attacker were able to register the `www.imovies.com` domain and have a certificate issued for that.
 
