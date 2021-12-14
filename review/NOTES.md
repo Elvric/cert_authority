@@ -53,7 +53,8 @@ User login and session management is implemented using `flask_login` library, wh
 # Back Doors
 
 ## 1. Broken Access Control
-It is possible to login as any user by intercepting the POST request to the /login endpoint and stripping away the password parameter. It is thus sufficient to know the userid of the user.
+It is possible to login as any user by intercepting the POST request to the /login endpoint (e.g using a proxy like BurpSuite) and stripping away the password parameter. It is thus sufficient to know the userid of the user. Concretely, the POST request body will contain only the `csrf_token` and `userid` parameters.
+By doing so, we can issue certificates on behalf of admins, thus gaining access to the admin control panel.
 
 # WhiteBox Review
 
@@ -69,12 +70,6 @@ It is possible to login as any user by intercepting the POST request to the /log
 - Potential issue with clients private keys as the sysadmin cannot retrieve the clients private keys without the client passphrase
 - Encrypted clients private keys are stored on the CA sqlite database
 
-<<<<<<< HEAD
 ## Backup
 - Only backup databases of the CA and of the database
 - No backup of sysadmin activities or nginx connections
-=======
-##1. Broken Access Control
-It is possible to login as any user by intercepting the POST request to the /login endpoint (e.g using a proxy like BurpSuite) and stripping away the password parameter. It is thus sufficient to know the userid of the user. Concretely, the POST request body will contain only the `csrf_token` and `userid` parameters.
-By doing so, we can issue certificates on behalf of admins, thus gaining access to the admin control panel.
->>>>>>> 6932e111fb442eb38cebf2516e6c8c784592de01
