@@ -67,9 +67,23 @@ By doing so, we can issue certificates on behalf of admins, thus gaining access 
 ## CA_Server
 - Use a local sqlLite instance to store the private and public keys
 - User private key is encrypted using a public key then stored in the SQLlite database.
-- Potential issue with clients private keys as the sysadmin cannot retrieve the clients private keys without the client passphrase
-- Encrypted clients private keys are stored on the CA sqlite database
 
 ## Backup
-- Only backup databases of the CA and of the database
-- No backup of sysadmin activities or nginx connections
+- Backup of the the database and the ca database are present
+- Webserver logs do not show up via rsyslog
+- rsyslogs are encrypted and stored in the root directory but they are left untouched on /var/log/rsyslog/* (which is necessary, overkill but not really a vulnerability per say)
+- Rsyslog is done through ssh forwarding meaning that it is hard to inject fake logs into the mix
+
+---
+# System description review key points
+Every machine has a local nftables firewall
+
+## SSH connection
+- Sysadmins can only connect to the companies machine via SSH jump through the external firewall.
+
+## Webserver
+- The only one that can access the mysql database with its own certificate.
+
+## Backup server 
+- Uses RAID 1+0 (not sure this is implemented but this is probably a feature that would exists if we had physical machines)
+- Says that the backup server holds all the config files that can be used to restore the system if it fails (could not find the certificates nor the conf files for that)
