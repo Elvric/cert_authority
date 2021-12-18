@@ -75,6 +75,7 @@ By doing so, we can issue certificates on behalf of admins, thus gaining access 
 - Webserver logs do not show up via rsyslog
 - rsyslogs are encrypted and stored in the root directory but they are left untouched on /var/log/rsyslog/* (which is necessary, overkill but not really a vulnerability per say)
 - Rsyslog is done through ssh forwarding meaning that it is hard to inject fake logs into the mix
+- If same new logfile come into the server with the same filename they will overwrite the already existing logs.
 
 ---
 # System description review key points
@@ -89,3 +90,48 @@ Every machine has a local nftables firewall
 ## Backup server 
 - Uses RAID 1+0 (not sure this is implemented but this is probably a feature that would exists if we had physical machines)
 - Says that the backup server holds all the config files that can be used to restore the system if it fails (could not find the certificates nor the conf files for that)
+
+## Firewalls
+Issue with the client IP address because they are using a NAT for the firewall, the IP address of any outsider is hidden, since the external firewall logs are not backed up it is impossible 
+to know from what source IP the requests originated from.
+
+### ExtFirewall
+- input: accept ssh, http, https, 8008 and 8080
+- Forward if the connection is already established between the dmz and the external world
+- output: accept all outputs coming from the external webserver
+- NAT
+  - re route any http and https request to the webserver
+  - change the source ip address to that of the ExtFirewall
+
+### Webserver
+- input
+  - accept 22, http, https, 8080, 8008
+  - 631 and mdns(5353) probably legacy from their original implementation
+    - This protocol is normally use to resolve host names to IP address in a local network without a DNS server.
+- Forward: everything is dropped
+- Output every outbound connection is accepted
+
+### Internal Firewall
+**this firewall forwarding property means that it almost does not exist**
+- input
+  - http, https, 22, 8080, 8008, mysql
+- forward
+  - forward established connections coming or outgoing the two interfaces
+  - Misconfigured it allows all forward requests
+- Output: allow all
+- NAT
+  - mysql request sent to the mysql server
+  - http, https, 8080
+
+### DB 
+- Input
+  - Accept 22¸ mysql
+- Forward: is banned
+- Output
+  - Allowed on everyone
+
+### CA
+- input http, https, ssh, 8008, 8080
+- Forward: drop all
+- Output
+  - everyone 
